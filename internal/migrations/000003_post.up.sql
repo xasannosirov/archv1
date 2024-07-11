@@ -1,0 +1,20 @@
+CREATE TABLE IF NOT EXISTS posts (
+    id SERIAL PRIMARY KEY,
+    title JSONB NOT NULL,
+    content JSONB NOT NULL,
+    slug VARCHAR,
+    short_content JSONB,
+    user_id INT NOT NULL,
+    files VARCHAR[],
+    status BOOLEAN,
+    created_at TIMESTAMP NOT NULL DEFAULT NOW(),
+    created_by INT NOT NULL,
+    updated_at TIMESTAMP,
+    updated_by INT NOT NULL,
+    deleted_at TIMESTAMP,
+    deleted_by INT,
+    FOREIGN KEY (user_id) REFERENCES users(id),
+    FOREIGN KEY (created_by) REFERENCES users(id),
+    FOREIGN KEY (updated_by) REFERENCES users(id),
+    FOREIGN KEY (deleted_by) REFERENCES users(id)
+);

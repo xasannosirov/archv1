@@ -1,0 +1,23 @@
+postgres_host: 'localhost'
+postgres_port: '5432'
+postgres_db: 'arch_db'
+postgres_user: 'postgres'
+postgres_pwd: 'root'
+postgres_ssl_mode: 'disable'
+
+redis_host: 'localhost'
+redis_port: '6379'
+redis_db: 0
+redis_pwd: ''
+
+http_host: 'localhost'
+http_port: '8080'
+ctx_timeout: '5s'
+gin_mode: 'debug'
+
+auth_config_path: './internal/pkg/config/model.conf'
+csv_file_path: './internal/pkg/config/policy.csv'
+
+access_ttl: '6h'
+refresh_ttl: '24h'
+jwt_secret: 'arch_secret'

@@ -15,58 +15,6 @@ const docTemplate = `{
     "host": "{{.Host}}",
     "basePath": "{{.BasePath}}",
     "paths": {
-        "/v1/auth/forget-password": {
-            "post": {
-                "description": "This API for sending request about forgot",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "auth"
-                ],
-                "summary": "Forget Password",
-                "parameters": [
-                    {
-                        "description": "Forgot Model",
-                        "name": "request",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/entity.ForgetPasswordRequest"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/entity.ForgetPasswordResponse"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/errors.Error"
-                        }
-                    },
-                    "404": {
-                        "description": "Not Found",
-                        "schema": {
-                            "$ref": "#/definitions/errors.Error"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/errors.Error"
-                        }
-                    }
-                }
-            }
-        },
         "/v1/auth/login": {
             "post": {
                 "description": "This API for login",
@@ -119,7 +67,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/v1/auth/new-access-token/:refresh": {
+        "/v1/auth/new-access/:refresh": {
             "get": {
                 "description": "This API for getting a new access-token",
                 "consumes": [
@@ -150,6 +98,12 @@ const docTemplate = `{
                     },
                     "400": {
                         "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/errors.Error"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
                         "schema": {
                             "$ref": "#/definitions/errors.Error"
                         }
@@ -194,8 +148,8 @@ const docTemplate = `{
                     }
                 ],
                 "responses": {
-                    "200": {
-                        "description": "OK",
+                    "201": {
+                        "description": "Created",
                         "schema": {
                             "$ref": "#/definitions/entity.RegisterResponse"
                         }
@@ -215,139 +169,33 @@ const docTemplate = `{
                 }
             }
         },
-        "/v1/auth/reset-password": {
-            "put": {
-                "description": "This API for reset password",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "auth"
-                ],
-                "summary": "Reset Password",
-                "parameters": [
-                    {
-                        "description": "Reset Password Model",
-                        "name": "request",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/entity.ResetPasswordRequest"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/entity.ResetPasswordResponse"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/errors.Error"
-                        }
-                    },
-                    "404": {
-                        "description": "Not Found",
-                        "schema": {
-                            "$ref": "#/definitions/errors.Error"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/errors.Error"
-                        }
-                    }
-                }
-            }
-        },
-        "/v1/auth/update-password": {
-            "put": {
-                "description": "This API for update password",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "auth"
-                ],
-                "summary": "Update Password",
-                "parameters": [
-                    {
-                        "description": "Update Password Model",
-                        "name": "request",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/entity.UpdatePasswordRequest"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/entity.UpdatePasswordResponse"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/errors.Error"
-                        }
-                    },
-                    "404": {
-                        "description": "Not Found",
-                        "schema": {
-                            "$ref": "#/definitions/errors.Error"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/errors.Error"
-                        }
-                    }
-                }
-            }
-        },
-        "/v1/auth/verify-otp": {
+        "/v1/files/upload": {
             "post": {
-                "description": "This API for verify one time password",
+                "description": "This API for upload a file",
                 "consumes": [
-                    "application/json"
+                    "multipart/form-data"
                 ],
                 "produces": [
                     "application/json"
                 ],
                 "tags": [
-                    "auth"
+                    "file"
                 ],
-                "summary": "Verify One Time Password",
+                "summary": "Upload File",
                 "parameters": [
                     {
-                        "description": "Verify OTP Model",
+                        "type": "file",
+                        "description": "Upload file",
                         "name": "request",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/entity.VerifyOtpRequest"
-                        }
+                        "in": "formData",
+                        "required": true
                     }
                 ],
                 "responses": {
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/entity.VerifyOtpResponse"
+                            "$ref": "#/definitions/entity.FileUploadResponse"
                         }
                     },
                     "400": {
@@ -356,8 +204,14 @@ const docTemplate = `{
                             "$ref": "#/definitions/errors.Error"
                         }
                     },
-                    "404": {
-                        "description": "Not Found",
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/errors.Error"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
                         "schema": {
                             "$ref": "#/definitions/errors.Error"
                         }
@@ -373,6 +227,11 @@ const docTemplate = `{
         },
         "/v1/menu": {
             "put": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "This API for updating a menu",
                 "consumes": [
                     "application/json"
@@ -435,6 +294,11 @@ const docTemplate = `{
                 }
             },
             "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "This API for creating a new menu",
                 "consumes": [
                     "application/json"
@@ -491,6 +355,11 @@ const docTemplate = `{
                 }
             },
             "patch": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "This API for updating a menu columns",
                 "consumes": [
                     "application/json"
@@ -670,6 +539,11 @@ const docTemplate = `{
                 }
             },
             "delete": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "This API for deleting a menu",
                 "consumes": [
                     "application/json"
@@ -769,6 +643,11 @@ const docTemplate = `{
         },
         "/v1/user": {
             "put": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "This API for updating a user",
                 "consumes": [
                     "application/json"
@@ -831,6 +710,11 @@ const docTemplate = `{
                 }
             },
             "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "This API for creating a new user",
                 "consumes": [
                     "application/json"
@@ -887,6 +771,11 @@ const docTemplate = `{
                 }
             },
             "patch": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "This API for updating a user columns",
                 "consumes": [
                     "application/json"
@@ -1066,6 +955,11 @@ const docTemplate = `{
                 }
             },
             "delete": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "This API for deleting a user",
                 "consumes": [
                     "application/json"
@@ -1131,6 +1025,9 @@ const docTemplate = `{
                         "type": "string"
                     }
                 },
+                "created_by": {
+                    "type": "integer"
+                },
                 "is_static": {
                     "type": "boolean"
                 },
@@ -1166,6 +1063,12 @@ const docTemplate = `{
                         "type": "string"
                     }
                 },
+                "files": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
                 "id": {
                     "type": "integer"
                 },
@@ -1198,10 +1101,16 @@ const docTemplate = `{
         "entity.CreateUserRequest": {
             "type": "object",
             "properties": {
+                "created_by": {
+                    "type": "integer"
+                },
                 "password": {
                     "type": "string"
                 },
                 "role": {
+                    "type": "string"
+                },
+                "status": {
                     "type": "string"
                 },
                 "username": {
@@ -1219,6 +1128,9 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "role": {
+                    "type": "string"
+                },
+                "status": {
                     "type": "string"
                 },
                 "username": {
@@ -1242,18 +1154,10 @@ const docTemplate = `{
                 }
             }
         },
-        "entity.ForgetPasswordRequest": {
+        "entity.FileUploadResponse": {
             "type": "object",
             "properties": {
-                "username": {
-                    "type": "string"
-                }
-            }
-        },
-        "entity.ForgetPasswordResponse": {
-            "type": "object",
-            "properties": {
-                "message": {
+                "file_url": {
                     "type": "string"
                 }
             }
@@ -1264,6 +1168,12 @@ const docTemplate = `{
                 "content": {
                     "type": "object",
                     "additionalProperties": {
+                        "type": "string"
+                    }
+                },
+                "files": {
+                    "type": "array",
+                    "items": {
                         "type": "string"
                     }
                 },
@@ -1305,8 +1215,14 @@ const docTemplate = `{
                 "password": {
                     "type": "string"
                 },
+                "refresh": {
+                    "type": "string"
+                },
                 "role": {
                     "type": "string"
+                },
+                "status": {
+                    "type": "boolean"
                 },
                 "username": {
                     "type": "string"
@@ -1358,11 +1274,17 @@ const docTemplate = `{
                 "access_token": {
                     "type": "string"
                 },
+                "id": {
+                    "type": "integer"
+                },
                 "refresh_token": {
                     "type": "string"
                 },
                 "role": {
                     "type": "string"
+                },
+                "status": {
+                    "type": "boolean"
                 },
                 "username": {
                     "type": "string"
@@ -1375,11 +1297,17 @@ const docTemplate = `{
                 "access_token": {
                     "type": "string"
                 },
+                "id": {
+                    "type": "integer"
+                },
                 "refresh_token": {
                     "type": "string"
                 },
                 "role": {
                     "type": "string"
+                },
+                "status": {
+                    "type": "boolean"
                 },
                 "username": {
                     "type": "string"
@@ -1409,26 +1337,22 @@ const docTemplate = `{
         "entity.RegisterResponse": {
             "type": "object",
             "properties": {
-                "message": {
-                    "type": "string"
-                }
-            }
-        },
-        "entity.ResetPasswordRequest": {
-            "type": "object",
-            "properties": {
-                "new_password": {
+                "access_token": {
                     "type": "string"
                 },
-                "username": {
+                "id": {
+                    "type": "integer"
+                },
+                "refresh_token": {
                     "type": "string"
-                }
-            }
-        },
-        "entity.ResetPasswordResponse": {
-            "type": "object",
-            "properties": {
-                "message": {
+                },
+                "role": {
+                    "type": "string"
+                },
+                "status": {
+                    "type": "boolean"
+                },
+                "username": {
                     "type": "string"
                 }
             }
@@ -1496,6 +1420,9 @@ const docTemplate = `{
                     "additionalProperties": {
                         "type": "string"
                     }
+                },
+                "updated_by": {
+                    "type": "integer"
                 }
             }
         },
@@ -1505,6 +1432,12 @@ const docTemplate = `{
                 "content": {
                     "type": "object",
                     "additionalProperties": {
+                        "type": "string"
+                    }
+                },
+                "files": {
+                    "type": "array",
+                    "items": {
                         "type": "string"
                     }
                 },
@@ -1537,25 +1470,6 @@ const docTemplate = `{
                 }
             }
         },
-        "entity.UpdatePasswordRequest": {
-            "type": "object",
-            "properties": {
-                "id": {
-                    "type": "integer"
-                },
-                "new_password": {
-                    "type": "string"
-                }
-            }
-        },
-        "entity.UpdatePasswordResponse": {
-            "type": "object",
-            "properties": {
-                "message": {
-                    "type": "string"
-                }
-            }
-        },
         "entity.UpdateUserColumnsRequest": {
             "type": "object",
             "properties": {
@@ -1582,6 +1496,12 @@ const docTemplate = `{
                 "role": {
                     "type": "string"
                 },
+                "status": {
+                    "type": "string"
+                },
+                "updated_by": {
+                    "type": "integer"
+                },
                 "username": {
                     "type": "string"
                 }
@@ -1596,35 +1516,13 @@ const docTemplate = `{
                 "password": {
                     "type": "string"
                 },
-                "role": {
-                    "type": "string"
-                },
-                "username": {
-                    "type": "string"
-                }
-            }
-        },
-        "entity.VerifyOtpRequest": {
-            "type": "object",
-            "properties": {
-                "otp": {
-                    "type": "string"
-                },
-                "username": {
-                    "type": "string"
-                }
-            }
-        },
-        "entity.VerifyOtpResponse": {
-            "type": "object",
-            "properties": {
-                "access_token": {
-                    "type": "string"
-                },
-                "refresh_token": {
+                "refresh": {
                     "type": "string"
                 },
                 "role": {
+                    "type": "string"
+                },
+                "status": {
                     "type": "string"
                 },
                 "username": {

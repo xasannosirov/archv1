@@ -11,12 +11,11 @@ import (
 	"context"
 	"github.com/casbin/casbin/v2"
 	"github.com/gin-gonic/gin"
-	"log"
 	"net/http"
 	"strconv"
 )
 
-type MenuController struct {
+type ControllerMenu struct {
 	Conf        *config.Config
 	PostgresDB  *postgres.DB
 	RedisDB     *redis.Redis
@@ -24,8 +23,8 @@ type MenuController struct {
 	MenuUseCase menu.MenuUseCaseI
 }
 
-func NewMenuController(option *MenuController) MenuController {
-	return MenuController{
+func NewMenuController(option *ControllerMenu) ControllerMenu {
+	return ControllerMenu{
 		Conf:        option.Conf,
 		PostgresDB:  option.PostgresDB,
 		RedisDB:     option.RedisDB,
@@ -45,20 +44,15 @@ func NewMenuController(option *MenuController) MenuController {
 // @Success 		200 {object} entity.SiteMenuListResponse
 // @Failure 		500 {object} errors.Error
 // @Router 			/v1/site/menu/list [GET]
-func (m *MenuController) GetSiteMenus(c *gin.Context) {
+func (m *ControllerMenu) GetSiteMenus(c *gin.Context) {
 	params, errStr := utils.ParseQueryParams(c.Request.URL.Query())
 	if errStr != nil {
-		c.JSON(http.StatusBadRequest, errors.Error{
-			Message: errStr[0],
-		})
-		log.Println("failed to parse query params", errStr)
+		errors.ErrorResponse(c, http.StatusBadRequest, errStr[0])
+
 		return
 	}
 
-	lang := c.Request.Header.Get("Accept-Language")
-	if lang == "" {
-		lang = "en"
-	}
+	lang := utils.GetLanguageFromHeader(c.Request)
 
 	filter := entity.Filter{
 		Page:  params.Page,
@@ -67,10 +61,8 @@ func (m *MenuController) GetSiteMenus(c *gin.Context) {
 
 	menus, err := m.MenuUseCase.GetSiteMenus(context.Background(), filter, lang)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, errors.Error{
-			Message: err.Error(),
-		})
-		log.Println("failed to get parent menus with child", err)
+		errors.ErrorResponse(c, http.StatusInternalServerError, err.Error())
+
 		return
 	}
 
@@ -91,20 +83,15 @@ func (m *MenuController) GetSiteMenus(c *gin.Context) {
 // @Failure 		403 {object} errors.Error
 // @Failure 		500 {object} errors.Error
 // @Router 			/v1/menu/list [GET]
-func (m *MenuController) List(c *gin.Context) {
+func (m *ControllerMenu) List(c *gin.Context) {
 	params, errStr := utils.ParseQueryParams(c.Request.URL.Query())
 	if errStr != nil {
-		c.JSON(http.StatusBadRequest, errors.Error{
-			Message: errStr[0],
-		})
-		log.Println("failed to parse query params", errStr)
+		errors.ErrorResponse(c, http.StatusBadRequest, errStr[0])
+
 		return
 	}
 
-	lang := c.Request.Header.Get("Accept-Language")
-	if lang == "" {
-		lang = "en"
-	}
+	lang := utils.GetLanguageFromHeader(c.Request)
 
 	filter := entity.Filter{
 		Page:  params.Page,
@@ -113,10 +100,8 @@ func (m *MenuController) List(c *gin.Context) {
 
 	menus, err := m.MenuUseCase.List(context.Background(), filter, lang)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, errors.Error{
-			Message: err.Error(),
-		})
-		log.Println("failed to get list menu", err)
+		errors.ErrorResponse(c, http.StatusInternalServerError, err.Error())
+
 		return
 	}
 
@@ -136,29 +121,22 @@ func (m *MenuController) List(c *gin.Context) {
 // @Failure 		403 {object} errors.Error
 // @Failure 		500 {object} errors.Error
 // @Router 			/v1/menu/{id} [GET]
-func (m *MenuController) GetByID(c *gin.Context) {
+func (m *ControllerMenu) GetByID(c *gin.Context) {
 	id := c.Param("id")
 
 	menuIntId, err := strconv.Atoi(id)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, errors.Error{
-			Message: err.Error(),
-		})
-		log.Println("failed to bind get menu request", err)
+		errors.ErrorResponse(c, http.StatusBadRequest, err.Error())
+
 		return
 	}
 
-	lang := c.Request.Header.Get("Accept-Language")
-	if lang == "" {
-		lang = "en"
-	}
+	lang := utils.GetLanguageFromHeader(c.Request)
 
 	menuResponse, err := m.MenuUseCase.GetByID(context.Background(), menuIntId, lang)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, errors.Error{
-			Message: err.Error(),
-		})
-		log.Println("failed to get menu", err)
+		errors.ErrorResponse(c, http.StatusInternalServerError, err.Error())
+
 		return
 	}
 
@@ -166,6 +144,7 @@ func (m *MenuController) GetByID(c *gin.Context) {
 }
 
 // Create
+// @Security 		BearerAuth
 // @Summary 		Create Menu
 // @Description 	This API for creating a new menu
 // @Tags			menu
@@ -178,23 +157,28 @@ func (m *MenuController) GetByID(c *gin.Context) {
 // @Failure 		403 {object} errors.Error
 // @Failure 		500 {object} errors.Error
 // @Router 			/v1/menu [POST]
-func (m *MenuController) Create(c *gin.Context) {
+func (m *ControllerMenu) Create(c *gin.Context) {
 	var request entity.CreateMenuRequest
 
 	if err := c.ShouldBindJSON(&request); err != nil {
-		c.JSON(http.StatusBadRequest, errors.Error{
-			Message: err.Error(),
-		})
-		log.Println("failed to bind create menu request", err)
+		errors.ErrorResponse(c, http.StatusBadRequest, err.Error())
+
 		return
 	}
 
+	claims, err := utils.GetTokenClaimsFromHeader(c.Request, m.Conf)
+	if err != nil {
+		errors.ErrorResponse(c, http.StatusUnauthorized, err.Error())
+
+		return
+	}
+
+	request.CreatedBy = claims["id"].(int)
+
 	menuResponse, err := m.MenuUseCase.Create(context.Background(), request)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, errors.Error{
-			Message: err.Error(),
-		})
-		log.Println("failed to create menu", err)
+		errors.ErrorResponse(c, http.StatusInternalServerError, err.Error())
+
 		return
 	}
 
@@ -202,6 +186,7 @@ func (m *MenuController) Create(c *gin.Context) {
 }
 
 // Update
+// @Security 		BearerAuth
 // @Summary 		Update Menu
 // @Description 	This API for updating a menu
 // @Tags			menu
@@ -215,23 +200,28 @@ func (m *MenuController) Create(c *gin.Context) {
 // @Failure 		404 {object} errors.Error
 // @Failure 		500 {object} errors.Error
 // @Router 			/v1/menu [PUT]
-func (m *MenuController) Update(c *gin.Context) {
+func (m *ControllerMenu) Update(c *gin.Context) {
 	var request entity.UpdateMenuRequest
 
 	if err := c.ShouldBindJSON(&request); err != nil {
-		c.JSON(http.StatusBadRequest, errors.Error{
-			Message: err.Error(),
-		})
-		log.Println("failed to bind update menu request", err)
+		errors.ErrorResponse(c, http.StatusBadRequest, err.Error())
+
 		return
 	}
 
+	claims, err := utils.GetTokenClaimsFromHeader(c.Request, m.Conf)
+	if err != nil {
+		errors.ErrorResponse(c, http.StatusUnauthorized, err.Error())
+
+		return
+	}
+
+	request.UpdatedBy = claims["id"].(int)
+
 	menuResponse, err := m.MenuUseCase.Update(context.Background(), request)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, errors.Error{
-			Message: err.Error(),
-		})
-		log.Println("failed to update menu", err)
+		errors.ErrorResponse(c, http.StatusInternalServerError, err.Error())
+
 		return
 	}
 
@@ -239,6 +229,7 @@ func (m *MenuController) Update(c *gin.Context) {
 }
 
 // UpdateColumns
+// @Security 		BearerAuth
 // @Summary 		Update Menu Columns
 // @Description 	This API for updating a menu columns
 // @Tags			menu
@@ -252,23 +243,28 @@ func (m *MenuController) Update(c *gin.Context) {
 // @Failure 		404 {object} errors.Error
 // @Failure 		500 {object} errors.Error
 // @Router 			/v1/menu [PATCH]
-func (m *MenuController) UpdateColumns(c *gin.Context) {
+func (m *ControllerMenu) UpdateColumns(c *gin.Context) {
 	var request entity.UpdateMenuColumnsRequest
 
 	if err := c.ShouldBindJSON(&request); err != nil {
-		c.JSON(http.StatusBadRequest, errors.Error{
-			Message: err.Error(),
-		})
-		log.Println("failed to bind update menu request", err)
+		errors.ErrorResponse(c, http.StatusBadRequest, err.Error())
+
 		return
 	}
 
+	claims, err := utils.GetTokenClaimsFromHeader(c.Request, m.Conf)
+	if err != nil {
+		errors.ErrorResponse(c, http.StatusUnauthorized, err.Error())
+
+		return
+	}
+
+	request.Fields["updated_by"] = claims["id"].(string)
+
 	menuResponse, err := m.MenuUseCase.UpdateColumns(context.Background(), request)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, errors.Error{
-			Message: err.Error(),
-		})
-		log.Println("failed to update menu", err)
+		errors.ErrorResponse(c, http.StatusInternalServerError, err.Error())
+
 		return
 	}
 
@@ -276,6 +272,7 @@ func (m *MenuController) UpdateColumns(c *gin.Context) {
 }
 
 // Delete
+// @Security 		BearerAuth
 // @Summary 		Delete menu
 // @Description 	This API for deleting a menu
 // @Tags			menu
@@ -288,24 +285,29 @@ func (m *MenuController) UpdateColumns(c *gin.Context) {
 // @Failure 		403 {object} errors.Error
 // @Failure 		500 {object} errors.Error
 // @Router 			/v1/menu/{id} [DELETE]
-func (m *MenuController) Delete(c *gin.Context) {
+func (m *ControllerMenu) Delete(c *gin.Context) {
 	id := c.Param("id")
 
 	userIntID, err := strconv.Atoi(id)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, errors.Error{
-			Message: err.Error(),
-		})
-		log.Println("failed to bind delete menu request", err)
+		errors.ErrorResponse(c, http.StatusBadRequest, err.Error())
+
 		return
 	}
 
-	response, err := m.MenuUseCase.Delete(context.Background(), userIntID)
+	claims, err := utils.GetTokenClaimsFromHeader(c.Request, m.Conf)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, errors.Error{
-			Message: err.Error(),
-		})
-		log.Println("failed to delete menu", err)
+		errors.ErrorResponse(c, http.StatusUnauthorized, err.Error())
+
+		return
+	}
+
+	deletedBy := claims["id"].(int)
+
+	response, err := m.MenuUseCase.Delete(context.Background(), userIntID, deletedBy)
+	if err != nil {
+		errors.ErrorResponse(c, http.StatusInternalServerError, err.Error())
+
 		return
 	}
 

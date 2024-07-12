@@ -12,7 +12,7 @@ import (
 
 // JWTHandler ...
 type JWTHandler struct {
-	Sub        string
+	Sub        int
 	Iss        string
 	Exp        string
 	Iat        string
@@ -27,7 +27,7 @@ type JWTHandler struct {
 // CustomClaims ...
 type CustomClaims struct {
 	*jwt.Token
-	Sub  string  `json:"sub"`
+	Sub  int     `json:"sub"`
 	Exp  float64 `json:"exp"`
 	Iat  float64 `json:"iat"`
 	Role string  `json:"role"`

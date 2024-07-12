@@ -336,7 +336,7 @@ func (r *Repo) Update(ctx context.Context, menu entity.UpdateMenuRequest) (entit
 		Slug:     menu.Slug,
 		Path:     menu.Path,
 	}).
-		Where("deleted_at IS NULL AND id = ?", menu.ID).
+		Where("deleted_at IS NULL AND status = TRUE AND id = ?", menu.ID).
 		Returning("id, content, title, is_static, sort, parent_id, slug, path").
 		Scan(ctx,
 			&response.ID,
@@ -397,7 +397,7 @@ func (r *Repo) UpdateColumns(ctx context.Context, fields entity.UpdateMenuColumn
 		}
 	}
 
-	err := updater.Where("deleted_at IS NULL AND id = ?", fields.ID).
+	err := updater.Where("deleted_at IS NULL AND status = TRUE AND id = ?", fields.ID).
 		Returning("id, title, content, is_static, sort, parent_id, slug, path").
 		Scan(
 			ctx,
@@ -425,8 +425,10 @@ func (r *Repo) UpdateColumns(ctx context.Context, fields entity.UpdateMenuColumn
 	return response, nil
 }
 
-func (r *Repo) Delete(ctx context.Context, menuID int) (entity.DeleteMenuResponse, error) {
-	result, err := r.DB.NewDelete().
+func (r *Repo) Delete(ctx context.Context, menuID, deletedBy int) (entity.DeleteMenuResponse, error) {
+	result, err := r.DB.NewUpdate().
+		Set("deleted_at = NOW()").
+		Set("deleted_by = ?", deletedBy).
 		Table("menus").
 		Where("deleted_at IS NULL AND id = ?", menuID).
 		Exec(ctx)

@@ -1,6 +1,7 @@
 package middleware
 
 import (
+	"archv1/internal/pkg/errors"
 	"log"
 	"net/http"
 
@@ -81,14 +82,12 @@ func (a *JWTRoleAuth) GetRole(r *http.Request) (string, error) {
 		return "", err
 	}
 
-	if cast.ToString(claims["role"]) == "admin" {
+	if cast.ToString(claims["role"]) == "sudo" {
+		role = "sudo"
+	} else if cast.ToString(claims["role"]) == "admin" {
 		role = "admin"
-	} else if cast.ToString(claims["role"]) == "teacher" {
-		role = "teacher"
-	} else if cast.ToString(claims["role"]) == "student" {
-		role = "student"
-	} else if cast.ToString(claims["role"]) == "unauthorized" {
-		role = "unauthorized"
+	} else if cast.ToString(claims["role"]) == "user" {
+		role = "user"
 	} else {
 		role = "unknown"
 	}
@@ -98,16 +97,16 @@ func (a *JWTRoleAuth) GetRole(r *http.Request) (string, error) {
 
 // RequireRefresh response with 401
 func (a *JWTRoleAuth) RequireRefresh(c *gin.Context) {
-	c.JSON(http.StatusUnauthorized, gin.H{
-		"Message": "Require refresh",
+	c.JSON(http.StatusUnauthorized, errors.Error{
+		Message: "Require refresh",
 	})
 	c.AbortWithStatus(401)
 }
 
 // RequirePermission response with 403
 func (a *JWTRoleAuth) RequirePermission(c *gin.Context) {
-	c.JSON(http.StatusForbidden, gin.H{
-		"Message": "You have no access this page",
+	c.JSON(http.StatusForbidden, errors.Error{
+		Message: "You have no access this page",
 	})
 	c.AbortWithStatus(403)
 }

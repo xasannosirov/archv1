@@ -2,20 +2,21 @@ package auth
 
 import (
 	"archv1/internal/entity"
+	"archv1/internal/pkg/bcrypt"
 	"archv1/internal/pkg/config"
 	"archv1/internal/pkg/errors"
 	"archv1/internal/pkg/repo/postgres"
 	"archv1/internal/pkg/repo/redis"
+	"archv1/internal/pkg/tokens"
 	"archv1/internal/usecase/auth"
 	"archv1/internal/usecase/user"
 	"context"
 	"github.com/casbin/casbin/v2"
 	"github.com/gin-gonic/gin"
-	"log"
 	"net/http"
 )
 
-type AuthController struct {
+type ControllerAuth struct {
 	Conf        *config.Config
 	PostgresDB  *postgres.DB
 	RedisDB     *redis.Redis
@@ -24,8 +25,8 @@ type AuthController struct {
 	UserUseCase user.UserUseCaseI
 }
 
-func NewAuthController(controller *AuthController) AuthController {
-	return AuthController{
+func NewAuthController(controller *ControllerAuth) ControllerAuth {
+	return ControllerAuth{
 		Conf:        controller.Conf,
 		PostgresDB:  controller.PostgresDB,
 		RedisDB:     controller.RedisDB,
@@ -46,57 +47,72 @@ func NewAuthController(controller *AuthController) AuthController {
 // @Failure 		400 {object} errors.Error
 // @Failure 		500 {object} errors.Error
 // @Router			/v1/auth/register [POST]
-func (a *AuthController) Register(c *gin.Context) {
+func (a *ControllerAuth) Register(c *gin.Context) {
 	var request entity.RegisterRequest
 
 	if err := c.ShouldBindJSON(&request); err != nil {
-		c.JSON(http.StatusBadRequest, errors.Error{
-			Message: err.Error(),
-		})
-		log.Println("failed to bind request", err)
+		errors.ErrorResponse(c, http.StatusBadRequest, err.Error())
+
 		return
 	}
 
 	status, err := a.AuthUseCase.UniqueUsername(context.Background(), request.Username)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, errors.Error{
-			Message: err.Error(),
-		})
-		log.Println("failed to check unique username", err)
+		errors.ErrorResponse(c, http.StatusInternalServerError, err.Error())
+
 		return
 	}
 	if status {
-		c.JSON(http.StatusBadRequest, errors.Error{
-			Message: "Username already taken",
-		})
-		log.Println("username already used", err)
+		errors.ErrorResponse(c, http.StatusBadRequest, "Username is already taken")
+
 		return
 	}
 
-	// hashed password
+	hashedPwd, err := bcrypt.HashPassword(request.Password)
+	if err != nil {
+		errors.ErrorResponse(c, http.StatusInternalServerError, err.Error())
+
+		return
+	}
 
 	userResponse, err := a.UserUseCase.Create(context.Background(), entity.CreateUserRequest{
 		Username: request.Username,
-		Password: request.Password,
+		Password: hashedPwd,
 		Role:     "user",
 	})
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, errors.Error{
-			Message: err.Error(),
-		})
-		log.Println("failed to create user", err)
+		errors.ErrorResponse(c, http.StatusInternalServerError, err.Error())
+
 		return
 	}
 
-	// generate token
+	jwtHandler := tokens.JWTHandler{
+		Sub:        userResponse.Id,
+		Role:       userResponse.Role,
+		SigningKey: a.Conf.JWTSecret,
+	}
+
+	access, refresh, err := jwtHandler.GenerateAuthJWT()
+	if err != nil {
+		errors.ErrorResponse(c, http.StatusInternalServerError, err.Error())
+
+		return
+	}
+
+	err = a.AuthUseCase.UpdateToken(context.Background(), userResponse.Id, refresh)
+	if err != nil {
+		errors.ErrorResponse(c, http.StatusInternalServerError, err.Error())
+
+		return
+	}
 
 	c.JSON(http.StatusCreated, entity.RegisterResponse{
 		ID:           userResponse.Id,
 		Username:     userResponse.Username,
 		Role:         userResponse.Role,
 		Status:       true,
-		AccessToken:  "",
-		RefreshToken: "",
+		AccessToken:  access,
+		RefreshToken: refresh,
 	})
 
 }
@@ -113,7 +129,51 @@ func (a *AuthController) Register(c *gin.Context) {
 // @Failure 		404 {object} errors.Error
 // @Failure 		500 {object} errors.Error
 // @Router 			/v1/auth/login [POST]
-func (a *AuthController) Login(c *gin.Context) {}
+func (a *ControllerAuth) Login(c *gin.Context) {
+	var request entity.LoginRequest
+
+	if err := c.ShouldBindJSON(&request); err != nil {
+		errors.ErrorResponse(c, http.StatusBadRequest, err.Error())
+
+		return
+	}
+
+	userResponse, err := a.AuthUseCase.GetUserByUsername(context.Background(), request.Username)
+	if err != nil {
+		errors.ErrorResponse(c, http.StatusNotFound, err.Error())
+
+		return
+	}
+
+	jwtHandler := tokens.JWTHandler{
+		Sub:        userResponse.Id,
+		Role:       userResponse.Role,
+		SigningKey: a.Conf.JWTSecret,
+	}
+
+	access, refresh, err := jwtHandler.GenerateAuthJWT()
+	if err != nil {
+		errors.ErrorResponse(c, http.StatusInternalServerError, err.Error())
+
+		return
+	}
+
+	err = a.AuthUseCase.UpdateToken(context.Background(), userResponse.Id, refresh)
+	if err != nil {
+		errors.ErrorResponse(c, http.StatusInternalServerError, err.Error())
+
+		return
+	}
+
+	c.JSON(http.StatusOK, entity.LoginResponse{
+		ID:           userResponse.Id,
+		Username:     userResponse.Username,
+		Role:         userResponse.Role,
+		Status:       userResponse.Status,
+		AccessToken:  access,
+		RefreshToken: refresh,
+	})
+}
 
 // NewAccessToken
 // @Summary 		Get New Access
@@ -124,7 +184,55 @@ func (a *AuthController) Login(c *gin.Context) {}
 // @Param 			refresh path string true "Refresh Token"
 // @Success 		200 {object} entity.NewAccessTokenResponse
 // @Failure 		400 {object} errors.Error
+// @Failure 		401 {object} errors.Error
 // @Failure 		404 {object} errors.Error
 // @Failure 		500 {object} errors.Error
 // @Router 			/v1/auth/new-access/:refresh [GET]
-func (a *AuthController) NewAccessToken(c *gin.Context) {}
+func (a *ControllerAuth) NewAccessToken(c *gin.Context) {
+	refreshToken := c.Param("refresh")
+
+	claims, err := tokens.ExtractClaim(refreshToken, []byte(a.Conf.JWTSecret))
+	if err != nil {
+		errors.ErrorResponse(c, http.StatusUnauthorized, err.Error())
+
+		return
+	}
+
+	userID := claims["id"].(int)
+
+	userInfo, err := a.UserUseCase.GetByID(context.Background(), userID)
+	if err != nil {
+		errors.ErrorResponse(c, http.StatusInternalServerError, err.Error())
+
+		return
+	}
+
+	jwtHandler := tokens.JWTHandler{
+		Sub:        userInfo.Id,
+		Role:       userInfo.Role,
+		SigningKey: a.Conf.JWTSecret,
+	}
+
+	access, refresh, err := jwtHandler.GenerateAuthJWT()
+	if err != nil {
+		errors.ErrorResponse(c, http.StatusInternalServerError, err.Error())
+
+		return
+	}
+
+	err = a.AuthUseCase.UpdateToken(context.Background(), userInfo.Id, refresh)
+	if err != nil {
+		errors.ErrorResponse(c, http.StatusInternalServerError, err.Error())
+
+		return
+	}
+
+	c.JSON(http.StatusOK, entity.NewAccessTokenResponse{
+		ID:           userInfo.Id,
+		Username:     userInfo.Username,
+		Role:         userInfo.Role,
+		Status:       userInfo.Status,
+		AccessToken:  access,
+		RefreshToken: refresh,
+	})
+}

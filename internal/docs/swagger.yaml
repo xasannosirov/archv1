@@ -5,6 +5,8 @@ definitions:
         additionalProperties:
           type: string
         type: object
+      created_by:
+        type: integer
       is_static:
         type: boolean
       parent_id:
@@ -28,6 +30,10 @@ definitions:
         additionalProperties:
           type: string
         type: object
+      files:
+        items:
+          type: string
+        type: array
       id:
         type: integer
       is_static:
@@ -49,9 +55,13 @@ definitions:
     type: object
   entity.CreateUserRequest:
     properties:
+      created_by:
+        type: integer
       password:
         type: string
       role:
+        type: string
+      status:
         type: string
       username:
         type: string
@@ -63,6 +73,8 @@ definitions:
       password:
         type: string
       role:
+        type: string
+      status:
         type: string
       username:
         type: string
@@ -77,14 +89,9 @@ definitions:
       message:
         type: string
     type: object
-  entity.ForgetPasswordRequest:
+  entity.FileUploadResponse:
     properties:
-      username:
-        type: string
-    type: object
-  entity.ForgetPasswordResponse:
-    properties:
-      message:
+      file_url:
         type: string
     type: object
   entity.GetMenuResponse:
@@ -93,6 +100,10 @@ definitions:
         additionalProperties:
           type: string
         type: object
+      files:
+        items:
+          type: string
+        type: array
       id:
         type: integer
       is_static:
@@ -118,8 +129,12 @@ definitions:
         type: integer
       password:
         type: string
+      refresh:
+        type: string
       role:
         type: string
+      status:
+        type: boolean
       username:
         type: string
     type: object
@@ -152,10 +167,14 @@ definitions:
     properties:
       access_token:
         type: string
+      id:
+        type: integer
       refresh_token:
         type: string
       role:
         type: string
+      status:
+        type: boolean
       username:
         type: string
     type: object
@@ -163,10 +182,14 @@ definitions:
     properties:
       access_token:
         type: string
+      id:
+        type: integer
       refresh_token:
         type: string
       role:
         type: string
+      status:
+        type: boolean
       username:
         type: string
     type: object
@@ -185,19 +208,17 @@ definitions:
     type: object
   entity.RegisterResponse:
     properties:
-      message:
+      access_token:
         type: string
-    type: object
-  entity.ResetPasswordRequest:
-    properties:
-      new_password:
+      id:
+        type: integer
+      refresh_token:
         type: string
+      role:
+        type: string
+      status:
+        type: boolean
       username:
-        type: string
-    type: object
-  entity.ResetPasswordResponse:
-    properties:
-      message:
         type: string
     type: object
   entity.SiteMenuListResponse:
@@ -242,6 +263,8 @@ definitions:
         additionalProperties:
           type: string
         type: object
+      updated_by:
+        type: integer
     type: object
   entity.UpdateMenuResponse:
     properties:
@@ -249,6 +272,10 @@ definitions:
         additionalProperties:
           type: string
         type: object
+      files:
+        items:
+          type: string
+        type: array
       id:
         type: integer
       is_static:
@@ -268,18 +295,6 @@ definitions:
           type: string
         type: object
     type: object
-  entity.UpdatePasswordRequest:
-    properties:
-      id:
-        type: integer
-      new_password:
-        type: string
-    type: object
-  entity.UpdatePasswordResponse:
-    properties:
-      message:
-        type: string
-    type: object
   entity.UpdateUserColumnsRequest:
     properties:
       fields:
@@ -297,6 +312,10 @@ definitions:
         type: string
       role:
         type: string
+      status:
+        type: string
+      updated_by:
+        type: integer
       username:
         type: string
     type: object
@@ -306,25 +325,11 @@ definitions:
         type: integer
       password:
         type: string
-      role:
-        type: string
-      username:
-        type: string
-    type: object
-  entity.VerifyOtpRequest:
-    properties:
-      otp:
-        type: string
-      username:
-        type: string
-    type: object
-  entity.VerifyOtpResponse:
-    properties:
-      access_token:
-        type: string
-      refresh_token:
+      refresh:
         type: string
       role:
+        type: string
+      status:
         type: string
       username:
         type: string
@@ -337,40 +342,6 @@ definitions:
 info:
   contact: {}
 paths:
-  /v1/auth/forget-password:
-    post:
-      consumes:
-      - application/json
-      description: This API for sending request about forgot
-      parameters:
-      - description: Forgot Model
-        in: body
-        name: request
-        required: true
-        schema:
-          $ref: '#/definitions/entity.ForgetPasswordRequest'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/entity.ForgetPasswordResponse'
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/errors.Error'
-        "404":
-          description: Not Found
-          schema:
-            $ref: '#/definitions/errors.Error'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/errors.Error'
-      summary: Forget Password
-      tags:
-      - auth
   /v1/auth/login:
     post:
       consumes:
@@ -405,7 +376,7 @@ paths:
       summary: Login
       tags:
       - auth
-  /v1/auth/new-access-token/:refresh:
+  /v1/auth/new-access/:refresh:
     get:
       consumes:
       - application/json
@@ -425,6 +396,10 @@ paths:
             $ref: '#/definitions/entity.NewAccessTokenResponse'
         "400":
           description: Bad Request
+          schema:
+            $ref: '#/definitions/errors.Error'
+        "401":
+          description: Unauthorized
           schema:
             $ref: '#/definitions/errors.Error'
         "404":
@@ -453,8 +428,8 @@ paths:
       produces:
       - application/json
       responses:
-        "200":
-          description: OK
+        "201":
+          description: Created
           schema:
             $ref: '#/definitions/entity.RegisterResponse'
         "400":
@@ -468,108 +443,43 @@ paths:
       summary: Register
       tags:
       - auth
-  /v1/auth/reset-password:
-    put:
-      consumes:
-      - application/json
-      description: This API for reset password
-      parameters:
-      - description: Reset Password Model
-        in: body
-        name: request
-        required: true
-        schema:
-          $ref: '#/definitions/entity.ResetPasswordRequest'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/entity.ResetPasswordResponse'
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/errors.Error'
-        "404":
-          description: Not Found
-          schema:
-            $ref: '#/definitions/errors.Error'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/errors.Error'
-      summary: Reset Password
-      tags:
-      - auth
-  /v1/auth/update-password:
-    put:
-      consumes:
-      - application/json
-      description: This API for update password
-      parameters:
-      - description: Update Password Model
-        in: body
-        name: request
-        required: true
-        schema:
-          $ref: '#/definitions/entity.UpdatePasswordRequest'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/entity.UpdatePasswordResponse'
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/errors.Error'
-        "404":
-          description: Not Found
-          schema:
-            $ref: '#/definitions/errors.Error'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/errors.Error'
-      summary: Update Password
-      tags:
-      - auth
-  /v1/auth/verify-otp:
+  /v1/files/upload:
     post:
       consumes:
-      - application/json
-      description: This API for verify one time password
+      - multipart/form-data
+      description: This API for upload a file
       parameters:
-      - description: Verify OTP Model
-        in: body
+      - description: Upload file
+        in: formData
         name: request
         required: true
-        schema:
-          $ref: '#/definitions/entity.VerifyOtpRequest'
+        type: file
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/entity.VerifyOtpResponse'
+            $ref: '#/definitions/entity.FileUploadResponse'
         "400":
           description: Bad Request
           schema:
             $ref: '#/definitions/errors.Error'
-        "404":
-          description: Not Found
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/errors.Error'
+        "403":
+          description: Forbidden
           schema:
             $ref: '#/definitions/errors.Error'
         "500":
           description: Internal Server Error
           schema:
             $ref: '#/definitions/errors.Error'
-      summary: Verify One Time Password
+      summary: Upload File
       tags:
-      - auth
+      - file
   /v1/menu:
     patch:
       consumes:
@@ -609,6 +519,8 @@ paths:
           description: Internal Server Error
           schema:
             $ref: '#/definitions/errors.Error'
+      security:
+      - BearerAuth: []
       summary: Update Menu Columns
       tags:
       - menu
@@ -646,6 +558,8 @@ paths:
           description: Internal Server Error
           schema:
             $ref: '#/definitions/errors.Error'
+      security:
+      - BearerAuth: []
       summary: Create Menu
       tags:
       - menu
@@ -687,6 +601,8 @@ paths:
           description: Internal Server Error
           schema:
             $ref: '#/definitions/errors.Error'
+      security:
+      - BearerAuth: []
       summary: Update Menu
       tags:
       - menu
@@ -724,6 +640,8 @@ paths:
           description: Internal Server Error
           schema:
             $ref: '#/definitions/errors.Error'
+      security:
+      - BearerAuth: []
       summary: Delete menu
       tags:
       - menu
@@ -870,6 +788,8 @@ paths:
           description: Internal Server Error
           schema:
             $ref: '#/definitions/errors.Error'
+      security:
+      - BearerAuth: []
       summary: Update User Columns
       tags:
       - user
@@ -907,6 +827,8 @@ paths:
           description: Internal Server Error
           schema:
             $ref: '#/definitions/errors.Error'
+      security:
+      - BearerAuth: []
       summary: Create User
       tags:
       - user
@@ -948,6 +870,8 @@ paths:
           description: Internal Server Error
           schema:
             $ref: '#/definitions/errors.Error'
+      security:
+      - BearerAuth: []
       summary: Update User
       tags:
       - user
@@ -985,6 +909,8 @@ paths:
           description: Internal Server Error
           schema:
             $ref: '#/definitions/errors.Error'
+      security:
+      - BearerAuth: []
       summary: Delete User
       tags:
       - user

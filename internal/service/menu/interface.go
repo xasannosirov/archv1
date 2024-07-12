@@ -12,5 +12,5 @@ type MenuServiceI interface {
 	Create(ctx context.Context, menu entity.CreateMenuRequest) (entity.CreateMenuResponse, error)
 	Update(ctx context.Context, menu entity.UpdateMenuRequest) (entity.UpdateMenuResponse, error)
 	UpdateColumns(ctx context.Context, fields entity.UpdateMenuColumnsRequest) (entity.UpdateMenuResponse, error)
-	Delete(ctx context.Context, menuID int) (entity.DeleteMenuResponse, error)
+	Delete(ctx context.Context, menuID, deletedBy int) (entity.DeleteMenuResponse, error)
 }

@@ -73,7 +73,7 @@ func New(option *Router) *gin.Engine {
 	menuUseCase := menuUseCasePackage.NewMenuUseCase(menuService)
 	authUseCase := authUseCasePackage.NewAuthUseCase(authService)
 
-	userController := userControllerPackage.NewUserController(&userControllerPackage.UserController{
+	userController := userControllerPackage.NewUserController(&userControllerPackage.ControllerUser{
 		Conf:        option.Conf,
 		PostgresDB:  option.PostgresDB,
 		RedisDB:     option.RedisCache,
@@ -81,7 +81,7 @@ func New(option *Router) *gin.Engine {
 		UserUseCase: userUseCase,
 	})
 
-	menuController := menuControllerPackage.NewMenuController(&menuControllerPackage.MenuController{
+	menuController := menuControllerPackage.NewMenuController(&menuControllerPackage.ControllerMenu{
 		Conf:        option.Conf,
 		PostgresDB:  option.PostgresDB,
 		RedisDB:     option.RedisCache,
@@ -89,7 +89,7 @@ func New(option *Router) *gin.Engine {
 		MenuUseCase: menuUseCase,
 	})
 
-	authController := authControllerPackage.NewAuthController(&authControllerPackage.AuthController{
+	authController := authControllerPackage.NewAuthController(&authControllerPackage.ControllerAuth{
 		Conf:        option.Conf,
 		PostgresDB:  option.PostgresDB,
 		RedisDB:     option.RedisCache,

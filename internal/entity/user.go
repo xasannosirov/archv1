@@ -1,41 +1,53 @@
 package entity
 
 type Users struct {
-	Username string `json:"username" bun:"username"`
-	Password string `json:"password" bun:"password"`
-	Role     string `json:"role" bun:"role"`
+	ID        int     `json:"id" bun:"id"`
+	Username  string  `json:"username" bun:"username"`
+	Password  string  `json:"password" bun:"password"`
+	Role      string  `json:"role" bun:"role"`
+	Status    string  `json:"status" bun:"status"`
+	Refresh   *string `json:"refresh" bun:"refresh"`
+	CreatedBy *int    `json:"created_by" bun:"created_by"`
+	UpdatedBy *int    `json:"updated_by" bun:"updated_by"`
 }
 
 type CreateUserRequest struct {
-	Username string `json:"username" bun:"id"`
-	Password string `json:"password" bun:"password"`
-	Role     string `json:"role" bun:"role"`
+	Username  string `json:"username"`
+	Password  string `json:"password"`
+	Role      string `json:"role"`
+	Status    string `json:"status"`
+	CreatedBy int    `json:"created_by"`
 }
 
 type CreateUserResponse struct {
-	Id       int    `json:"id" bun:"id"`
-	Username string `json:"username" bun:"username"`
-	Password string `json:"password" bun:"password"`
-	Role     string `json:"role" bun:"role"`
-}
-
-type UpdateUserRequest struct {
 	Id       int    `json:"id"`
 	Username string `json:"username"`
 	Password string `json:"password"`
 	Role     string `json:"role"`
+	Status   string `json:"status"`
+}
+
+type UpdateUserRequest struct {
+	Id        int    `json:"id"`
+	Username  string `json:"username"`
+	Password  string `json:"password"`
+	Role      string `json:"role"`
+	Status    string `json:"status"`
+	UpdatedBy int    `json:"updated_by"`
+}
+
+type UpdateUserResponse struct {
+	Id       int    `json:"id"`
+	Username string `json:"username"`
+	Password string `json:"password"`
+	Role     string `json:"role"`
+	Status   string `json:"status"`
+	Refresh  string `json:"refresh"`
 }
 
 type UpdateUserColumnsRequest struct {
 	ID     int               `json:"id"`
 	Fields map[string]string `json:"fields"`
-}
-
-type UpdateUserResponse struct {
-	Id       int     `json:"id"`
-	Username *string `json:"username"`
-	Password *string `json:"password"`
-	Role     *string `json:"role"`
 }
 
 type DeleteUserResponse struct {
@@ -44,9 +56,11 @@ type DeleteUserResponse struct {
 
 type GetUserResponse struct {
 	Id       int     `json:"id"`
-	Username *string `json:"username"`
-	Password *string `json:"password"`
-	Role     *string `json:"role"`
+	Username string  `json:"username"`
+	Password string  `json:"password"`
+	Role     string  `json:"role"`
+	Status   bool    `json:"status"`
+	Refresh  *string `json:"refresh"`
 }
 
 type Filter struct {

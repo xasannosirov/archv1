@@ -70,8 +70,8 @@ func (u *MenuService) UpdateColumns(ctx context.Context, fields entity.UpdateMen
 	return menuResponse, nil
 }
 
-func (u *MenuService) Delete(ctx context.Context, menuID int) (entity.DeleteMenuResponse, error) {
-	menuResponse, err := u.menuRepo.Delete(ctx, menuID)
+func (u *MenuService) Delete(ctx context.Context, menuID, deletedBy int) (entity.DeleteMenuResponse, error) {
+	menuResponse, err := u.menuRepo.Delete(ctx, menuID, deletedBy)
 	if err != nil {
 		return entity.DeleteMenuResponse{}, err
 	}

@@ -61,8 +61,8 @@ func (u *UserService) UpdateColumns(ctx context.Context, columns entity.UpdateUs
 	return userResponse, nil
 }
 
-func (u *UserService) Delete(ctx context.Context, userID int) (entity.DeleteUserResponse, error) {
-	userResponse, err := u.userRepo.Delete(ctx, userID)
+func (u *UserService) Delete(ctx context.Context, userID, deletedBy int) (entity.DeleteUserResponse, error) {
+	userResponse, err := u.userRepo.Delete(ctx, userID, deletedBy)
 	if err != nil {
 		return entity.DeleteUserResponse{}, err
 	}

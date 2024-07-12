@@ -39,6 +39,10 @@ type UpdatePostColumnsRequest struct {
 	Fields map[string]string `json:"fields" bun:"fields"`
 }
 
+type DeletePostResponse struct {
+	Message string `json:"message" bun:"message"`
+}
+
 type GetPostResponse struct {
 	ID      int               `json:"id" bun:"id"`
 	Title   map[string]string `json:"title" bun:"title"`

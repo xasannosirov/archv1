@@ -1,6 +1,12 @@
 package utils
 
-import "strconv"
+import (
+	"archv1/internal/pkg/config"
+	"archv1/internal/pkg/tokens"
+	"net/http"
+	"strconv"
+	"strings"
+)
 
 // QueryParams ...
 type QueryParams struct {
@@ -36,4 +42,31 @@ func ParseQueryParams(queryParams map[string][]string) (*QueryParams, []string) 
 	}
 
 	return &params, errStr
+}
+
+func GetTokenClaimsFromHeader(request *http.Request, config *config.Config) (map[string]interface{}, error) {
+	token := request.Header.Get("Authorization")
+	var softToken string
+	if strings.Contains(token, "Bearer ") {
+		softToken = strings.Split(token, "Bearer ")[1]
+	} else {
+		softToken = token
+	}
+
+	claims, err := tokens.ExtractClaim(softToken, []byte(config.JWTSecret))
+	if err != nil {
+		return nil, err
+	}
+
+	return claims, nil
+}
+
+func GetLanguageFromHeader(request *http.Request) string {
+	lang := strings.ToLower(request.Header.Get("Accept-Language"))
+
+	if lang == "" {
+		return "en"
+	}
+
+	return lang
 }

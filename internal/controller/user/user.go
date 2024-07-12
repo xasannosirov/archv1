@@ -9,15 +9,15 @@ import (
 	"archv1/internal/pkg/utils"
 	"archv1/internal/usecase/user"
 	"context"
-	"log"
 	"net/http"
 	"strconv"
+	"strings"
 
 	"github.com/casbin/casbin/v2"
 	"github.com/gin-gonic/gin"
 )
 
-type UserController struct {
+type ControllerUser struct {
 	Conf        *config.Config
 	PostgresDB  *postgres.DB
 	RedisDB     *redis.Redis
@@ -25,8 +25,8 @@ type UserController struct {
 	UserUseCase user.UserUseCaseI
 }
 
-func NewUserController(option *UserController) UserController {
-	return UserController{
+func NewUserController(option *ControllerUser) ControllerUser {
+	return ControllerUser{
 		Conf:        option.Conf,
 		PostgresDB:  option.PostgresDB,
 		RedisDB:     option.RedisDB,
@@ -49,13 +49,11 @@ func NewUserController(option *UserController) UserController {
 // @Failure 		403 {object} errors.Error
 // @Failure 		500 {object} errors.Error
 // @Router 			/v1/user/list [GET]
-func (u *UserController) List(c *gin.Context) {
+func (u *ControllerUser) List(c *gin.Context) {
 	params, errStr := utils.ParseQueryParams(c.Request.URL.Query())
 	if errStr != nil {
-		c.JSON(http.StatusBadRequest, errors.Error{
-			Message: errStr[0],
-		})
-		log.Println("failed to parse query params", errStr)
+		errors.ErrorResponse(c, http.StatusBadRequest, errStr[0])
+
 		return
 	}
 
@@ -64,10 +62,8 @@ func (u *UserController) List(c *gin.Context) {
 		Limit: params.Limit,
 	})
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, errors.Error{
-			Message: err.Error(),
-		})
-		log.Println("failed to get list", err)
+		errors.ErrorResponse(c, http.StatusInternalServerError, err.Error())
+
 		return
 	}
 
@@ -87,24 +83,20 @@ func (u *UserController) List(c *gin.Context) {
 // @Failure 		403 {object} errors.Error
 // @Failure 		500 {object} errors.Error
 // @Router 			/v1/user/{id} [GET]
-func (u *UserController) GetByID(c *gin.Context) {
+func (u *ControllerUser) GetByID(c *gin.Context) {
 	id := c.Param("id")
 
 	userIntID, err := strconv.Atoi(id)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, errors.Error{
-			Message: err.Error(),
-		})
-		log.Println("failed to bind get user request", err)
+		errors.ErrorResponse(c, http.StatusBadRequest, err.Error())
+
 		return
 	}
 
 	userResponse, err := u.UserUseCase.GetByID(context.Background(), userIntID)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, errors.Error{
-			Message: err.Error(),
-		})
-		log.Println("failed to get user", err)
+		errors.ErrorResponse(c, http.StatusBadRequest, err.Error())
+
 		return
 	}
 
@@ -112,6 +104,7 @@ func (u *UserController) GetByID(c *gin.Context) {
 }
 
 // Create
+// @Security 		BearerAuth
 // @Summary 		Create User
 // @Description 	This API for creating a new user
 // @Tags			user
@@ -124,23 +117,35 @@ func (u *UserController) GetByID(c *gin.Context) {
 // @Failure 		403 {object} errors.Error
 // @Failure 		500 {object} errors.Error
 // @Router 			/v1/user [POST]
-func (u *UserController) Create(c *gin.Context) {
+func (u *ControllerUser) Create(c *gin.Context) {
 	var request entity.CreateUserRequest
 
 	if err := c.ShouldBindJSON(&request); err != nil {
-		c.JSON(http.StatusBadRequest, errors.Error{
-			Message: err.Error(),
-		})
-		log.Println("failed to bind create user request", err)
+		errors.ErrorResponse(c, http.StatusBadRequest, err.Error())
+
+		return
+	}
+
+	claims, err := utils.GetTokenClaimsFromHeader(c.Request, u.Conf)
+	if err != nil {
+		errors.ErrorResponse(c, http.StatusUnauthorized, err.Error())
+
+		return
+	}
+
+	request.CreatedBy = claims["id"].(int)
+
+	userRole := strings.ToLower(request.Role)
+	if userRole != "user" && userRole != "admin" {
+		errors.ErrorResponse(c, http.StatusBadRequest, "invalid role")
+
 		return
 	}
 
 	userResponse, err := u.UserUseCase.Create(context.Background(), request)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, errors.Error{
-			Message: err.Error(),
-		})
-		log.Println("failed to create user", err)
+		errors.ErrorResponse(c, http.StatusInternalServerError, err.Error())
+
 		return
 	}
 
@@ -148,6 +153,7 @@ func (u *UserController) Create(c *gin.Context) {
 }
 
 // Update
+// @Security 		BearerAuth
 // @Summary 		Update User
 // @Description 	This API for updating a user
 // @Tags			user
@@ -161,23 +167,35 @@ func (u *UserController) Create(c *gin.Context) {
 // @Failure 		404 {object} errors.Error
 // @Failure 		500 {object} errors.Error
 // @Router 			/v1/user [PUT]
-func (u *UserController) Update(c *gin.Context) {
+func (u *ControllerUser) Update(c *gin.Context) {
 	var request entity.UpdateUserRequest
 
 	if err := c.ShouldBindJSON(&request); err != nil {
-		c.JSON(http.StatusBadRequest, errors.Error{
-			Message: err.Error(),
-		})
-		log.Println("failed to bind update user request", err)
+		errors.ErrorResponse(c, http.StatusBadRequest, err.Error())
+
 		return
 	}
 
+	userRole := strings.ToLower(request.Role)
+	if userRole != "user" && userRole != "admin" {
+		errors.ErrorResponse(c, http.StatusBadRequest, "invalid role")
+
+		return
+	}
+
+	claims, err := utils.GetTokenClaimsFromHeader(c.Request, u.Conf)
+	if err != nil {
+		errors.ErrorResponse(c, http.StatusUnauthorized, err.Error())
+
+		return
+	}
+
+	request.UpdatedBy = claims["id"].(int)
+
 	userResponse, err := u.UserUseCase.Update(context.Background(), request)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, errors.Error{
-			Message: err.Error(),
-		})
-		log.Println("failed to update user", err)
+		errors.ErrorResponse(c, http.StatusInternalServerError, err.Error())
+
 		return
 	}
 
@@ -185,6 +203,7 @@ func (u *UserController) Update(c *gin.Context) {
 }
 
 // UpdateColumns
+// @Security 		BearerAuth
 // @Summary 		Update User Columns
 // @Description 	This API for updating a user columns
 // @Tags			user
@@ -198,23 +217,37 @@ func (u *UserController) Update(c *gin.Context) {
 // @Failure 		404 {object} errors.Error
 // @Failure 		500 {object} errors.Error
 // @Router 			/v1/user [PATCH]
-func (u *UserController) UpdateColumns(c *gin.Context) {
+func (u *ControllerUser) UpdateColumns(c *gin.Context) {
 	var request entity.UpdateUserColumnsRequest
 
 	if err := c.ShouldBindJSON(&request); err != nil {
-		c.JSON(http.StatusBadRequest, errors.Error{
-			Message: err.Error(),
-		})
-		log.Println("failed to bind update user request", err)
+		errors.ErrorResponse(c, http.StatusBadRequest, err.Error())
+
 		return
 	}
 
+	if request.Fields["role"] != "" {
+		userRole := strings.ToLower(request.Fields["role"])
+		if userRole != "user" && userRole != "admin" {
+			errors.ErrorResponse(c, http.StatusBadRequest, "invalid role")
+
+			return
+		}
+	}
+
+	claims, err := utils.GetTokenClaimsFromHeader(c.Request, u.Conf)
+	if err != nil {
+		errors.ErrorResponse(c, http.StatusUnauthorized, err.Error())
+
+		return
+	}
+
+	request.Fields["updated_by"] = claims["id"].(string)
+
 	userResponse, err := u.UserUseCase.UpdateColumns(context.Background(), request)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, errors.Error{
-			Message: err.Error(),
-		})
-		log.Println("failed to update user", err)
+		errors.ErrorResponse(c, http.StatusInternalServerError, err.Error())
+
 		return
 	}
 
@@ -222,6 +255,7 @@ func (u *UserController) UpdateColumns(c *gin.Context) {
 }
 
 // Delete
+// @Security 		BearerAuth
 // @Summary 		Delete User
 // @Description 	This API for deleting a user
 // @Tags			user
@@ -234,24 +268,29 @@ func (u *UserController) UpdateColumns(c *gin.Context) {
 // @Failure 		403 {object} errors.Error
 // @Failure 		500 {object} errors.Error
 // @Router 			/v1/user/{id} [DELETE]
-func (u *UserController) Delete(c *gin.Context) {
+func (u *ControllerUser) Delete(c *gin.Context) {
 	id := c.Param("id")
 
 	userIntID, err := strconv.Atoi(id)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, errors.Error{
-			Message: err.Error(),
-		})
-		log.Println("failed to bind delete user request", err)
+		errors.ErrorResponse(c, http.StatusBadRequest, err.Error())
+
 		return
 	}
 
-	response, err := u.UserUseCase.Delete(context.Background(), userIntID)
+	claims, err := utils.GetTokenClaimsFromHeader(c.Request, u.Conf)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, errors.Error{
-			Message: err.Error(),
-		})
-		log.Println("failed to delete user", err)
+		errors.ErrorResponse(c, http.StatusUnauthorized, err.Error())
+
+		return
+	}
+
+	deletedBy := claims["id"].(int)
+
+	response, err := u.UserUseCase.Delete(context.Background(), userIntID, deletedBy)
+	if err != nil {
+		errors.ErrorResponse(c, http.StatusInternalServerError, err.Error())
+
 		return
 	}
 

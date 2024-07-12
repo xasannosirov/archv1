@@ -1,6 +1,7 @@
 package auth
 
 import (
+	"archv1/internal/entity"
 	"archv1/internal/repository/postgres/auth"
 	"context"
 )
@@ -21,4 +22,8 @@ func (m *AuthService) UniqueUsername(ctx context.Context, username string) (bool
 
 func (a *AuthService) UpdateToken(ctx context.Context, id int, token string) error {
 	return a.authRepo.UpdateToken(ctx, id, token)
+}
+
+func (a *AuthService) GetUserByUsername(ctx context.Context, username string) (entity.GetUserResponse, error) {
+	return a.authRepo.GetUserByUsername(ctx, username)
 }

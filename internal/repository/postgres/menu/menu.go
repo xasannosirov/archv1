@@ -450,3 +450,35 @@ func (r *Repo) Delete(ctx context.Context, menuID, deletedBy int) (entity.Delete
 		Message: "success",
 	}, nil
 }
+
+func (r *Repo) AddFile(ctx context.Context, fileURL string, menuID int) error {
+	selectQuery := fmt.Sprintf(
+		`SELECT files FROM menus WHERE deleted_at IS NULL AND status = TRUE AND id = '%d'`, menuID,
+	)
+
+	var files []string
+
+	if err := r.DB.QueryRowContext(ctx, selectQuery).Scan(&files); err != nil {
+		return err
+	}
+
+	files = append(files, fileURL)
+
+	insertQuery := fmt.Sprintf(`INSERT INTO menus (files) VALUES ('%v')`, files)
+
+	result, err := r.DB.ExecContext(ctx, insertQuery)
+	if err != nil {
+		return err
+	}
+
+	rowEffects, err := result.RowsAffected()
+	if err != nil {
+		return err
+	}
+
+	if rowEffects == 0 {
+		return errors.New("file not found")
+	}
+
+	return nil
+}

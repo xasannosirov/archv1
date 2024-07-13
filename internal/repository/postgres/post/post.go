@@ -4,6 +4,8 @@ import (
 	"archv1/internal/entity"
 	"archv1/internal/pkg/repo/postgres"
 	"context"
+	"errors"
+	"fmt"
 )
 
 type Repo struct {
@@ -38,4 +40,36 @@ func (r *Repo) UpdateColumns(ctx context.Context, post entity.UpdatePostColumnsR
 
 func (r *Repo) Delete(ctx context.Context, postID, deletedBy int) (entity.DeletePostResponse, error) {
 	return entity.DeletePostResponse{}, nil
+}
+
+func (r *Repo) AddFile(ctx context.Context, fileURL string, postID int) error {
+	selectQuery := fmt.Sprintf(
+		`SELECT files FROM posts WHERE deleted_at IS NULL AND status = TRUE AND id = '%d'`, postID,
+	)
+
+	var files []string
+
+	if err := r.DB.QueryRowContext(ctx, selectQuery).Scan(&files); err != nil {
+		return err
+	}
+
+	files = append(files, fileURL)
+
+	insertQuery := fmt.Sprintf(`INSERT INTO posts (files) VALUES ('%v')`, files)
+
+	result, err := r.DB.ExecContext(ctx, insertQuery)
+	if err != nil {
+		return err
+	}
+
+	rowEffects, err := result.RowsAffected()
+	if err != nil {
+		return err
+	}
+
+	if rowEffects == 0 {
+		return errors.New("file not found")
+	}
+
+	return nil
 }

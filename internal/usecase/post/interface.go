@@ -12,4 +12,5 @@ type PostUseCaseI interface {
 	Update(ctx context.Context, menu entity.UpdatePostRequest) (entity.UpdatePostResponse, error)
 	UpdateColumns(ctx context.Context, fields entity.UpdatePostColumnsRequest) (entity.UpdatePostResponse, error)
 	Delete(ctx context.Context, menuID, deletedBy int) (entity.DeletePostResponse, error)
+	AddFile(ctx context.Context, fileURL string, postID int) error
 }

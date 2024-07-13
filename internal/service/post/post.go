@@ -39,3 +39,7 @@ func (r *PostService) UpdateColumns(ctx context.Context, post entity.UpdatePostC
 func (r *PostService) Delete(ctx context.Context, postID, deletedBy int) (entity.DeletePostResponse, error) {
 	return entity.DeletePostResponse{}, nil
 }
+
+func (r *PostService) AddFile(ctx context.Context, fileURL string, postID int) error {
+	return r.postRepo.AddFile(ctx, fileURL, postID)
+}

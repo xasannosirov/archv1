@@ -78,3 +78,7 @@ func (u *MenuService) Delete(ctx context.Context, menuID, deletedBy int) (entity
 
 	return menuResponse, nil
 }
+
+func (u *MenuService) AddFile(ctx context.Context, fileURL string, menuID int) error {
+	return u.menuRepo.AddFile(ctx, fileURL, menuID)
+}

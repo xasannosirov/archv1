@@ -1,18 +1,21 @@
 package files
 
 import (
+	"archv1/internal/entity"
 	"archv1/internal/pkg/config"
 	"archv1/internal/pkg/errors"
 	"archv1/internal/pkg/repo/postgres"
 	"archv1/internal/pkg/repo/redis"
 	"archv1/internal/usecase/menu"
 	"archv1/internal/usecase/post"
+	"context"
 	"github.com/casbin/casbin/v2"
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 	"net/http"
 	"os"
 	"path/filepath"
+	"strings"
 )
 
 type FileController struct {
@@ -41,7 +44,8 @@ func NewFileController(controller FileController) *FileController {
 // @Tags  	    file
 // @Accept      multipart/form-data
 // @Produce     json
-// @Param		request formData file true "Upload file"
+// @Param		file formData file true "Upload file"
+// @Param 		request body entity.FileUploadRequest true
 // @Success     200 {object} entity.FileUploadResponse
 // @Failure 	400 {object} errors.Error
 // @Failure 	401 {object} errors.Error
@@ -49,8 +53,21 @@ func NewFileController(controller FileController) *FileController {
 // @Failure     500 {object} errors.Error
 // @Router 		/v1/files/upload [POST]
 func (f *FileController) UploadFile(c *gin.Context) {
-	file, err := c.FormFile("request")
+	file, err := c.FormFile("file")
 	if err != nil {
+		errors.ErrorResponse(c, http.StatusBadRequest, "invalid request")
+
+		return
+	}
+
+	var request entity.FileUploadRequest
+	if err := c.ShouldBind(&request); err != nil {
+		errors.ErrorResponse(c, http.StatusBadRequest, "invalid request")
+
+		return
+	}
+
+	if strings.ToLower(request.Category) != "post" || strings.ToLower(request.Category) != "menu" {
 		errors.ErrorResponse(c, http.StatusBadRequest, "invalid request")
 
 		return
@@ -76,5 +93,23 @@ func (f *FileController) UploadFile(c *gin.Context) {
 		return
 	}
 
-	// save file path to storage
+	if strings.ToLower(request.Category) == "menu" {
+		err = f.MenuUseCase.AddFile(context.Background(), filePath, request.ObjectID)
+		if err != nil {
+			errors.ErrorResponse(c, http.StatusInternalServerError, "error happened when add file")
+
+			return
+		}
+	} else if strings.ToLower(request.Category) == "post" {
+		err = f.PostUseCase.AddFile(context.Background(), filePath, request.ObjectID)
+		if err != nil {
+			errors.ErrorResponse(c, http.StatusInternalServerError, "error happened when add file")
+
+			return
+		}
+	}
+
+	c.JSON(http.StatusOK, entity.FileUploadResponse{
+		FileURL: filePath,
+	})
 }

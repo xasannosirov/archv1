@@ -65,7 +65,7 @@ func (r *Repo) List(ctx context.Context, filter entity.Filter) (entity.ListUserR
 		return entity.ListUserResponse{}, err
 	}
 
-	totalQuery := `SELECT COUNT(*) FROM users WHERE deleted_at IS NULL`
+	totalQuery := `SELECT COUNT(*) FROM users WHERE deleted_at IS NULL AND status = TRUE`
 	if err := r.DB.QueryRowContext(ctx, totalQuery).Scan(&response.Total); err != nil {
 		return entity.ListUserResponse{}, err
 	}
@@ -113,9 +113,16 @@ func (r *Repo) Create(ctx context.Context, user entity.CreateUserRequest) (entit
 			Role:     user.Role,
 			Status:   user.Status,
 		}).
-		Returning("id, username, password, role").
-		Scan(ctx, &response.Id, &response.Username, &response.Password, &response.Role)
+		Returning("id, username, password, role, status").
+		Scan(ctx, &response.Id, &response.Username, &response.Password, &response.Role, &response.Status)
 
+	if err != nil {
+		return entity.CreateUserResponse{}, err
+	}
+
+	reSetQuery := "UPDATE users SET created_by = ? WHERE username = ?"
+
+	_, err = r.DB.ExecContext(ctx, reSetQuery, response.Id, user.Username)
 	if err != nil {
 		return entity.CreateUserResponse{}, err
 	}
@@ -128,10 +135,12 @@ func (r *Repo) Update(ctx context.Context, user entity.UpdateUserRequest) (entit
 
 	err := r.DB.NewUpdate().
 		Model(&entity.Users{
-			Username: user.Username,
-			Password: user.Password,
-			Role:     user.Role,
-			Status:   user.Status,
+			ID:        &user.Id,
+			Username:  user.Username,
+			Password:  user.Password,
+			Role:      user.Role,
+			Status:    user.Status,
+			UpdatedBy: &user.UpdatedBy,
 		}).Where("deleted_at IS NULL AND status = TRUE AND id = ?", user.Id).
 		Returning("id, username, password, role, status, refresh").
 		Scan(
@@ -158,14 +167,19 @@ func (r *Repo) UpdateColumns(ctx context.Context, request entity.UpdateUserColum
 	for key, value := range request.Fields {
 		if key == "username" {
 			updater.Set(key+" = ?", value)
-		}
-		if key == "password" {
+		} else if key == "password" {
 			updater.Set(key+" = ?", value)
-		}
-		if key == "role" {
+		} else if key == "role" {
+			updater.Set(key+" = ?", value)
+		} else if key == "status" {
+			updater.Set(key+" = ?", value)
+		} else if key == "refresh" {
 			updater.Set(key+" = ?", value)
 		}
 	}
+
+	updater.Set("updated_at = NOW()")
+	updater.Set("updated_by = ?", request.Fields["updated_by"])
 
 	err := updater.Where("deleted_at IS NULL AND status = TRUE AND id = ?", request.ID).
 		Returning("id, username, password, role, status, refresh").

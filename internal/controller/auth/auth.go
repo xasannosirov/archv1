@@ -11,8 +11,10 @@ import (
 	"archv1/internal/usecase/auth"
 	"archv1/internal/usecase/user"
 	"context"
+	"fmt"
 	"github.com/casbin/casbin/v2"
 	"github.com/gin-gonic/gin"
+	"github.com/spf13/cast"
 	"net/http"
 )
 
@@ -79,6 +81,7 @@ func (a *ControllerAuth) Register(c *gin.Context) {
 		Username: request.Username,
 		Password: hashedPwd,
 		Role:     "user",
+		Status:   true,
 	})
 	if err != nil {
 		errors.ErrorResponse(c, http.StatusInternalServerError, err.Error())
@@ -187,9 +190,10 @@ func (a *ControllerAuth) Login(c *gin.Context) {
 // @Failure 		401 {object} errors.Error
 // @Failure 		404 {object} errors.Error
 // @Failure 		500 {object} errors.Error
-// @Router 			/v1/auth/new-access/:refresh [GET]
+// @Router 			/v1/auth/new-access/{refresh} [GET]
 func (a *ControllerAuth) NewAccessToken(c *gin.Context) {
 	refreshToken := c.Param("refresh")
+	fmt.Println(refreshToken)
 
 	claims, err := tokens.ExtractClaim(refreshToken, []byte(a.Conf.JWTSecret))
 	if err != nil {
@@ -198,7 +202,7 @@ func (a *ControllerAuth) NewAccessToken(c *gin.Context) {
 		return
 	}
 
-	userID := claims["id"].(int)
+	userID := cast.ToInt(claims["sub"])
 
 	userInfo, err := a.UserUseCase.GetByID(context.Background(), userID)
 	if err != nil {

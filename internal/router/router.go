@@ -1,27 +1,27 @@
 package router
 
 import (
-	authControllerPackage "archv1/internal/controller/auth"
-	fileControllerPackage "archv1/internal/controller/files"
-	menuControllerPackage "archv1/internal/controller/menu"
-	postControllerPackage "archv1/internal/controller/post"
-	userControllerPackage "archv1/internal/controller/user"
+	authCont "archv1/internal/controller/auth"
+	fileCont "archv1/internal/controller/files"
+	menuCont "archv1/internal/controller/menu"
+	postCont "archv1/internal/controller/post"
+	userCont "archv1/internal/controller/user"
 	_ "archv1/internal/docs"
 	"archv1/internal/pkg/config"
 	"archv1/internal/pkg/repo/postgres"
 	"archv1/internal/pkg/repo/redis"
-	authRepoPackage "archv1/internal/repository/postgres/auth"
-	menuRepoPackage "archv1/internal/repository/postgres/menu"
-	postRepoPackage "archv1/internal/repository/postgres/post"
-	userRepoPackage "archv1/internal/repository/postgres/user"
-	authServicePackage "archv1/internal/service/auth"
-	menuServicePackage "archv1/internal/service/menu"
-	postServicePackage "archv1/internal/service/post"
-	userServicePackage "archv1/internal/service/user"
-	authUseCasePackage "archv1/internal/usecase/auth"
-	menuUseCasePackage "archv1/internal/usecase/menu"
-	postUseCasePackage "archv1/internal/usecase/post"
-	userUseCasePackage "archv1/internal/usecase/user"
+	authRepo "archv1/internal/repository/postgres/auth"
+	menuRepo "archv1/internal/repository/postgres/menu"
+	postRepo "archv1/internal/repository/postgres/post"
+	userRepo "archv1/internal/repository/postgres/user"
+	authService "archv1/internal/service/auth"
+	menuService "archv1/internal/service/menu"
+	postService "archv1/internal/service/post"
+	userService "archv1/internal/service/user"
+	authUseCase "archv1/internal/usecase/auth"
+	menuUseCase "archv1/internal/usecase/menu"
+	postUseCase "archv1/internal/usecase/post"
+	userUseCase "archv1/internal/usecase/user"
 
 	"github.com/casbin/casbin/v2"
 	"github.com/gin-contrib/cors"
@@ -32,11 +32,10 @@ import (
 )
 
 type Router struct {
-	Conf        *config.Config
-	PostgresDB  *postgres.DB
-	RedisCache  *redis.Redis
-	Enforcer    *casbin.Enforcer
-	UserUseCase userUseCasePackage.UserUseCaseI
+	Conf       *config.Config
+	PostgresDB *postgres.DB
+	RedisCache *redis.Redis
+	Enforcer   *casbin.Enforcer
 }
 
 // New
@@ -61,64 +60,66 @@ func New(option *Router) *gin.Engine {
 	//jwtHandler := tokens.JWTHandler{
 	//	SigningKey: option.Conf.JWTSecret,
 	//}
-
+	//
 	//middleware.NewAuthorizer(option.Enforcer, jwtHandler, *option.Conf)
 
 	apiV1 := router.Group("/v1")
 
-	userRepository := userRepoPackage.NewUserRepo(option.PostgresDB)
-	menuRepository := menuRepoPackage.NewMenuRepo(option.PostgresDB)
-	authRepository := authRepoPackage.NewAuthRepo(option.PostgresDB)
-	postRepository := postRepoPackage.NewPostRepo(option.PostgresDB)
+	userRepository := userRepo.NewUserRepo(option.PostgresDB)
+	menuRepository := menuRepo.NewMenuRepo(option.PostgresDB)
+	authRepository := authRepo.NewAuthRepo(option.PostgresDB)
+	postRepository := postRepo.NewPostRepo(option.PostgresDB)
 
-	userService := userServicePackage.NewUserService(userRepository)
-	menuService := menuServicePackage.NewMenuService(menuRepository)
-	authService := authServicePackage.NewAuthService(authRepository)
-	postService := postServicePackage.NewPostService(postRepository)
+	userServiceI := userService.NewUserService(userRepository)
+	menuServiceI := menuService.NewMenuService(menuRepository)
+	authServiceI := authService.NewAuthService(authRepository)
+	postServiceI := postService.NewPostService(postRepository)
 
-	userUseCase := userUseCasePackage.NewUserUseCase(userService)
-	menuUseCase := menuUseCasePackage.NewMenuUseCase(menuService)
-	authUseCase := authUseCasePackage.NewAuthUseCase(authService)
-	postUseCase := postUseCasePackage.NewPostUseCase(postService)
+	userUseCaseI := userUseCase.NewUserUseCase(userServiceI)
+	menuUseCaseI := menuUseCase.NewMenuUseCase(menuServiceI)
+	authUseCaseI := authUseCase.NewAuthUseCase(authServiceI)
+	postUseCaseI := postUseCase.NewPostUseCase(postServiceI)
 
-	userController := userControllerPackage.NewUserController(&userControllerPackage.ControllerUser{
+	userController := userCont.NewUserController(&userCont.ControllerUser{
 		Conf:        option.Conf,
 		PostgresDB:  option.PostgresDB,
 		RedisDB:     option.RedisCache,
 		Enforcer:    option.Enforcer,
-		UserUseCase: userUseCase,
+		UserUseCase: userUseCaseI,
 	})
 
-	menuController := menuControllerPackage.NewMenuController(&menuControllerPackage.ControllerMenu{
+	menuController := menuCont.NewMenuController(&menuCont.ControllerMenu{
 		Conf:        option.Conf,
 		PostgresDB:  option.PostgresDB,
 		RedisDB:     option.RedisCache,
 		Enforcer:    option.Enforcer,
-		MenuUseCase: menuUseCase,
+		MenuUseCase: menuUseCaseI,
 	})
 
-	authController := authControllerPackage.NewAuthController(&authControllerPackage.ControllerAuth{
+	authController := authCont.NewAuthController(&authCont.ControllerAuth{
 		Conf:        option.Conf,
 		PostgresDB:  option.PostgresDB,
 		RedisDB:     option.RedisCache,
 		Enforcer:    option.Enforcer,
-		AuthUseCase: authUseCase,
+		AuthUseCase: authUseCaseI,
+		UserUseCase: userUseCaseI,
 	})
 
-	postController := postControllerPackage.NewPostController(&postControllerPackage.ControllerPost{
+	postController := postCont.NewPostController(&postCont.ControllerPost{
 		Conf:        option.Conf,
 		Postgres:    option.PostgresDB,
 		Redis:       option.RedisCache,
 		Enforcer:    option.Enforcer,
-		PostUseCase: postUseCase,
+		PostUseCase: postUseCaseI,
 	})
 
-	fileController := fileControllerPackage.NewFileController(&fileControllerPackage.FileController{
+	fileController := fileCont.NewFileController(&fileCont.FileController{
 		Conf:        option.Conf,
 		Postgres:    option.PostgresDB,
 		Redis:       option.RedisCache,
 		Enforcer:    option.Enforcer,
-		PostUseCase: postUseCase,
+		PostUseCase: postUseCaseI,
+		MenuUseCase: menuUseCaseI,
 	})
 
 	// Auth APIs
@@ -152,7 +153,7 @@ func New(option *Router) *gin.Engine {
 	apiV1.DELETE("/post/:id", postController.Delete)
 
 	// File APIs
-	apiV1.POST("/upload-file", fileController.UploadFile)
+	apiV1.POST("/files/upload", fileController.UploadFile)
 
 	url := ginSwagger.URL("swagger/doc.json")
 	apiV1.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler, url))

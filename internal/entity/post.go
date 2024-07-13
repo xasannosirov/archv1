@@ -9,6 +9,8 @@ type Posts struct {
 	Status       bool     `json:"status" bun:"status"`
 	UserID       int      `json:"user_id" bun:"user_id"`
 	Files        []string `json:"files" bun:"files"`
+	CreatedBy    *int     `json:"created_by" bun:"created_by"`
+	UpdatedBy    *int     `json:"updated_by" bun:"updated_by"`
 }
 
 type CreatePostRequest struct {
@@ -18,6 +20,7 @@ type CreatePostRequest struct {
 	Slug         string            `json:"slug" bun:"slug"`
 	Status       bool              `json:"status" bun:"status"`
 	UserID       int               `json:"user_id" bun:"user_id"`
+	CreatedBy    int               `json:"-" bun:"created_by"`
 }
 
 type CreatePostResponse struct {
@@ -40,6 +43,7 @@ type UpdatePostRequest struct {
 	Status       bool              `json:"status" bun:"status"`
 	UserID       int               `json:"user_id" bun:"user_id"`
 	Files        []string          `json:"files" bun:"files"`
+	UpdatedBy    int               `json:"-" bun:"updated_by"`
 }
 
 type UpdatePostResponse struct {

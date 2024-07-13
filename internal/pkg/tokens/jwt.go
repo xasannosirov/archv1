@@ -45,13 +45,14 @@ func (jwtHandler *JWTHandler) GenerateAuthJWT() (access, refresh string, err err
 	accessToken = jwt.New(jwt.SigningMethodHS256)
 	refreshToken = jwt.New(jwt.SigningMethodHS256)
 
+	cfg := config.NewConfig()
+	now := cast.ToInt(time.Now().Unix())
+
 	claims = accessToken.Claims.(jwt.MapClaims)
 	claims["sub"] = jwtHandler.Sub
-	claims["exp"] = cast.ToInt(time.Now().Unix()) + jwtHandler.Timeout
+	claims["exp"] = now + cast.ToInt(cfg.AccessTTL)
 	claims["iat"] = time.Now().Unix()
 	claims["role"] = jwtHandler.Role
-
-	cfg := config.NewConfig()
 
 	access, err = accessToken.SignedString([]byte(cfg.JWTSecret))
 	if err != nil {
@@ -61,7 +62,7 @@ func (jwtHandler *JWTHandler) GenerateAuthJWT() (access, refresh string, err err
 
 	rtClaims = refreshToken.Claims.(jwt.MapClaims)
 	rtClaims["sub"] = jwtHandler.Sub
-	rtClaims["exp"] = cast.ToInt(time.Now().Unix()) + cast.ToInt(cfg.RefreshTTL)
+	rtClaims["exp"] = now + cast.ToInt(cfg.RefreshTTL)
 	rtClaims["iat"] = time.Now().Unix()
 	rtClaims["role"] = jwtHandler.Role
 

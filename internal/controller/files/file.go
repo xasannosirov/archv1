@@ -9,13 +9,14 @@ import (
 	"archv1/internal/usecase/menu"
 	"archv1/internal/usecase/post"
 	"context"
+	"fmt"
 	"github.com/casbin/casbin/v2"
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 	"net/http"
 	"os"
 	"path/filepath"
-	"strings"
+	"strconv"
 )
 
 type FileController struct {
@@ -45,7 +46,8 @@ func NewFileController(controller *FileController) *FileController {
 // @Accept      multipart/form-data
 // @Produce     json
 // @Param		file formData file true "Upload file"
-// @Param 		request body entity.FileUploadRequest true "File Upload Model"
+// @Param 		category query string true "Category"
+// @Param 		id query string true "Object ID"
 // @Success     200 {object} entity.FileUploadResponse
 // @Failure 	400 {object} errors.Error
 // @Failure 	401 {object} errors.Error
@@ -55,55 +57,62 @@ func NewFileController(controller *FileController) *FileController {
 func (f *FileController) UploadFile(c *gin.Context) {
 	file, err := c.FormFile("file")
 	if err != nil {
-		errors.ErrorResponse(c, http.StatusBadRequest, "invalid request")
+		errors.ErrorResponse(c, http.StatusBadRequest, "invalid file request")
 
 		return
 	}
 
-	var request entity.FileUploadRequest
-	if err := c.ShouldBind(&request); err != nil {
-		errors.ErrorResponse(c, http.StatusBadRequest, "invalid request")
+	category := c.Query("category")
+	fmt.Println(category)
+	id := c.Query("id")
+
+	intId, err := strconv.Atoi(id)
+	if err != nil {
+		errors.ErrorResponse(c, http.StatusBadRequest, "invalid file id")
 
 		return
 	}
 
-	if strings.ToLower(request.Category) != "post" || strings.ToLower(request.Category) != "menu" {
-		errors.ErrorResponse(c, http.StatusBadRequest, "invalid request")
+	if category != "post" && category != "menu" {
+		errors.ErrorResponse(c, http.StatusBadRequest, "invalid category request")
 
 		return
 	}
 
-	uploadDir := "./files"
+	uploadDir := "./internal/files"
 
 	err = os.MkdirAll(uploadDir, os.ModePerm)
 	if err != nil {
-		errors.ErrorResponse(c, http.StatusBadRequest, "invalid request")
+		errors.ErrorResponse(c, http.StatusBadRequest, "invalid mkdir request")
 
 		return
 	}
 
 	uid := uuid.NewString()
 	ext := filepath.Ext(file.Filename)
+	addr := "localhost:8080/"
 
-	filePath := filepath.Join(uploadDir, uid+ext)
-	err = c.SaveUploadedFile(file, filePath)
+	savePath := filepath.Join(uploadDir, uid+ext)
+	err = c.SaveUploadedFile(file, savePath)
 	if err != nil {
 		errors.ErrorResponse(c, http.StatusInternalServerError, "error happened when save file")
 
 		return
 	}
 
-	if strings.ToLower(request.Category) == "menu" {
-		err = f.MenuUseCase.AddFile(context.Background(), filePath, request.ObjectID)
+	filePath := addr + savePath
+
+	if category == "menu" {
+		err = f.MenuUseCase.AddFile(context.Background(), filePath, intId)
 		if err != nil {
-			errors.ErrorResponse(c, http.StatusInternalServerError, "error happened when add file")
+			errors.ErrorResponse(c, http.StatusInternalServerError, err.Error())
 
 			return
 		}
-	} else if strings.ToLower(request.Category) == "post" {
-		err = f.PostUseCase.AddFile(context.Background(), filePath, request.ObjectID)
+	} else {
+		err = f.PostUseCase.AddFile(context.Background(), filePath, intId)
 		if err != nil {
-			errors.ErrorResponse(c, http.StatusInternalServerError, "error happened when add file")
+			errors.ErrorResponse(c, http.StatusInternalServerError, err.Error())
 
 			return
 		}

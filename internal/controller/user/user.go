@@ -9,6 +9,7 @@ import (
 	"archv1/internal/pkg/utils"
 	"archv1/internal/usecase/user"
 	"context"
+	"github.com/spf13/cast"
 	"net/http"
 	"strconv"
 	"strings"
@@ -133,7 +134,7 @@ func (u *ControllerUser) Create(c *gin.Context) {
 		return
 	}
 
-	request.CreatedBy = claims["id"].(int)
+	request.CreatedBy = cast.ToInt(claims["sub"])
 
 	userRole := strings.ToLower(request.Role)
 	if userRole != "user" && userRole != "admin" {
@@ -190,7 +191,7 @@ func (u *ControllerUser) Update(c *gin.Context) {
 		return
 	}
 
-	request.UpdatedBy = claims["id"].(int)
+	request.UpdatedBy = cast.ToInt(claims["sub"])
 
 	userResponse, err := u.UserUseCase.Update(context.Background(), request)
 	if err != nil {
@@ -242,7 +243,7 @@ func (u *ControllerUser) UpdateColumns(c *gin.Context) {
 		return
 	}
 
-	request.Fields["updated_by"] = claims["id"].(string)
+	request.Fields["updated_by"] = cast.ToString(claims["sub"])
 
 	userResponse, err := u.UserUseCase.UpdateColumns(context.Background(), request)
 	if err != nil {
@@ -285,7 +286,7 @@ func (u *ControllerUser) Delete(c *gin.Context) {
 		return
 	}
 
-	deletedBy := claims["id"].(int)
+	deletedBy := cast.ToInt(claims["sub"])
 
 	response, err := u.UserUseCase.Delete(context.Background(), userIntID, deletedBy)
 	if err != nil {

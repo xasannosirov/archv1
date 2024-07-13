@@ -18,6 +18,6 @@ gin_mode: 'debug'
 auth_config_path: './internal/pkg/config/model.conf'
 csv_file_path: './internal/pkg/config/policy.csv'
 
-access_ttl: '6h'
-refresh_ttl: '24h'
+access_ttl: '10800'
+refresh_ttl: '86400'
 jwt_secret: 'arch_secret'

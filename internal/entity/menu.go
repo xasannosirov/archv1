@@ -1,18 +1,20 @@
 package entity
 
+import "github.com/lib/pq"
+
 type Menus struct {
-	ID        *int     `json:"id" bun:"id"`
-	Title     string   `json:"title" bun:"title"`
-	Content   string   `json:"content" bun:"content"`
-	IsStatic  bool     `json:"is_static" bun:"is_static"`
-	Sort      int      `json:"sort" bun:"sort"`
-	ParentID  *int     `json:"parent_id" bun:"parent_id"`
-	Status    bool     `json:"status" bun:"status"`
-	Slug      string   `json:"slug" bun:"slug"`
-	Path      string   `json:"path" bun:"path"`
-	Files     []string `json:"files" bun:"files"`
-	CreatedBy *int     `json:"created_by" bun:"created_by"`
-	UpdatedBy *int     `json:"updated_by" bun:"updated_by"`
+	ID        *int           `json:"id" bun:"id"`
+	Title     string         `json:"title" bun:"title"`
+	Content   string         `json:"content" bun:"content"`
+	IsStatic  bool           `json:"is_static" bun:"is_static"`
+	Sort      int            `json:"sort" bun:"sort"`
+	ParentID  *int           `json:"parent_id" bun:"parent_id"`
+	Status    bool           `json:"status" bun:"status"`
+	Slug      string         `json:"slug" bun:"slug"`
+	Path      string         `json:"path" bun:"path"`
+	Files     pq.StringArray `json:"files" bun:"files"`
+	CreatedBy *int           `json:"created_by" bun:"created_by"`
+	UpdatedBy *int           `json:"updated_by" bun:"updated_by"`
 }
 
 type CreateMenuRequest struct {
@@ -24,7 +26,7 @@ type CreateMenuRequest struct {
 	Status    bool              `json:"status"`
 	Slug      string            `json:"slug"`
 	Path      string            `json:"path"`
-	CreatedBy int               `json:"created_by"`
+	CreatedBy int               `json:"-"`
 }
 
 type CreateMenuResponse struct {
@@ -50,7 +52,7 @@ type UpdateMenuRequest struct {
 	Status    bool              `json:"status"`
 	Slug      string            `json:"slug"`
 	Path      string            `json:"path"`
-	UpdatedBy int               `json:"updated_by"`
+	UpdatedBy int               `json:"-"`
 }
 
 type UpdateMenuResponse struct {

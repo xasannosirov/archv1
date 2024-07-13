@@ -7,6 +7,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/lib/pq"
 )
 
 type Repo struct {
@@ -108,9 +109,10 @@ func (r *Repo) GetByID(ctx context.Context, postID int, lang string) (entity.Get
 	    posts
 	`, lang, lang, lang)
 
-	whereQyery := ` WHERE deleted_at IS NULL AND status = TRUE AND id = ?`
+	whereQuery := ` WHERE deleted_at IS NULL AND status = TRUE AND id = ?`
 
-	err := r.DB.QueryRowContext(ctx, selectQuery+whereQyery, postID).Scan(
+	var files pq.StringArray
+	err := r.DB.QueryRowContext(ctx, selectQuery+whereQuery, postID).Scan(
 		&response.ID,
 		&title,
 		&content,
@@ -118,11 +120,13 @@ func (r *Repo) GetByID(ctx context.Context, postID int, lang string) (entity.Get
 		&response.Slug,
 		&response.Status,
 		&response.UserID,
-		&response.Files,
+		&files,
 	)
 	if err != nil {
 		return entity.GetPostResponse{}, err
 	}
+
+	response.Files = files
 
 	response.Title = map[string]string{lang: title}
 	response.Content = map[string]string{lang: content}
@@ -160,6 +164,7 @@ func (r *Repo) Create(ctx context.Context, post entity.CreatePostRequest) (entit
 			Slug:         post.Slug,
 			Status:       post.Status,
 			UserID:       post.UserID,
+			CreatedBy:    &post.CreatedBy,
 		}).
 		Returning("id, title, content, short_content, slug, user_id, files").
 		Scan(ctx,
@@ -221,6 +226,7 @@ func (r *Repo) Update(ctx context.Context, post entity.UpdatePostRequest) (entit
 			Status:       post.Status,
 			UserID:       post.UserID,
 			Files:        post.Files,
+			UpdatedBy:    &post.UpdatedBy,
 		}).
 		Where("deleted_at IS NULL AND status = TRUE AND id = ?", post.ID).
 		Returning("id, title, content, short_content, slug, user_id, files").
@@ -356,7 +362,7 @@ func (r *Repo) AddFile(ctx context.Context, fileURL string, postID int) error {
 		`SELECT files FROM posts WHERE deleted_at IS NULL AND status = TRUE AND id = '%d'`, postID,
 	)
 
-	var files []string
+	var files pq.StringArray
 
 	if err := r.DB.QueryRowContext(ctx, selectQuery).Scan(&files); err != nil {
 		return err

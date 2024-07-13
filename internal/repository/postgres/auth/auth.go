@@ -19,7 +19,7 @@ func NewAuthRepo(DB *postgres.DB) AuthRepository {
 }
 
 func (r *Repo) UniqueUsername(ctx context.Context, username string) (bool, error) {
-	query := `SELECT COUNT(*) FROM users WHERE username = $1 AND deleted_at IS NULL;`
+	query := `SELECT COUNT(*) FROM users WHERE username = ? AND deleted_at IS NULL;`
 
 	var count int64
 	if err := r.DB.QueryRowContext(ctx, query, username).Scan(&count); err != nil {
@@ -31,11 +31,13 @@ func (r *Repo) UniqueUsername(ctx context.Context, username string) (bool, error
 
 func (r *Repo) UpdateToken(ctx context.Context, id int, token string) error {
 	result, err := r.DB.NewUpdate().
-		Set("refresh", token).
+		Table("users").
+		Set("refresh = ?", token).
 		Where("deleted_at IS NULL AND id = ?", id).
 		Exec(ctx)
 
 	if err != nil {
+		fmt.Println(err.Error(), 111)
 		return err
 	}
 
@@ -63,9 +65,9 @@ func (r *Repo) GetUserByUsername(ctx context.Context, username string) (entity.G
 	    status, 
 	    refresh 
 	FROM users 
-	WHERE username = '%s' AND deleted_at IS NULL`, username)
+	WHERE username = ? AND deleted_at IS NULL AND status = TRUE`)
 
-	err := r.DB.QueryRowContext(ctx, selectQuery).Scan(
+	err := r.DB.QueryRowContext(ctx, selectQuery, username).Scan(
 		&response.Id,
 		&response.Username,
 		&response.Password,

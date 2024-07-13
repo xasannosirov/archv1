@@ -11,6 +11,7 @@ import (
 	"context"
 	"github.com/casbin/casbin/v2"
 	"github.com/gin-gonic/gin"
+	"github.com/spf13/cast"
 	"net/http"
 	"strconv"
 )
@@ -173,7 +174,7 @@ func (m *ControllerMenu) Create(c *gin.Context) {
 		return
 	}
 
-	request.CreatedBy = claims["id"].(int)
+	request.CreatedBy = cast.ToInt(claims["sub"])
 
 	menuResponse, err := m.MenuUseCase.Create(context.Background(), request)
 	if err != nil {
@@ -216,7 +217,7 @@ func (m *ControllerMenu) Update(c *gin.Context) {
 		return
 	}
 
-	request.UpdatedBy = claims["id"].(int)
+	request.UpdatedBy = cast.ToInt(claims["sub"])
 
 	menuResponse, err := m.MenuUseCase.Update(context.Background(), request)
 	if err != nil {
@@ -259,7 +260,7 @@ func (m *ControllerMenu) UpdateColumns(c *gin.Context) {
 		return
 	}
 
-	request.Fields["updated_by"] = claims["id"].(string)
+	request.Fields["updated_by"] = cast.ToString(claims["sub"])
 
 	menuResponse, err := m.MenuUseCase.UpdateColumns(context.Background(), request)
 	if err != nil {
@@ -302,7 +303,7 @@ func (m *ControllerMenu) Delete(c *gin.Context) {
 		return
 	}
 
-	deletedBy := claims["id"].(int)
+	deletedBy := cast.ToInt(claims["sub"])
 
 	response, err := m.MenuUseCase.Delete(context.Background(), userIntID, deletedBy)
 	if err != nil {

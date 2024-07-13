@@ -1,4 +1,36 @@
 p, unauthorized, /v1/swagger/*, GET
 p, unauthorized, /v1/swagger/index.html, GET
 p, unauthorized, /v1/swagger/index.html, POST
-p, unauthorized, /v1/user, POST
+
+p, user, /v1/user/{id}, GET
+p, user, /v1/user/{id}, DELETE
+p, user, /v1/user, PUT
+p, user, /v1/user, PATCH
+p, user, /v1/site/menu/list, GET
+p, user, /v1/menu/list, GET
+p, user, /v1/menu/{id}, GET
+p, user, /v1/post/list, GET
+p, user, /v1/post/{id}, GET
+
+p, admin, /v1/user/list, GET
+p, admin, /v1/user/{id}, GET
+p, admin, /v1/user, POST
+p, admin, /v1/user, PUT
+p, admin, /v1/user, PATCH
+p, admin, /v1/user/{id}, DELETE
+p, admin, /v1/site/menu/list, GET
+p, admin, /v1/menu/list, GET
+p, admin, /v1/menu/{id}, GET
+p, admin, /v1/menu, POST
+p, admin, /v1/menu, PUT
+p, admin, /v1/menu, PATCH
+p, admin, /v1/menu, DELETE
+p, admin, /v1/post/list, GET
+p, admin, /v1/post/{id}, GET
+p, admin, /v1/post, POST
+p, admin, /v1/post, PUT
+p, admin, /v1/post, PATCH
+p, admin, /v1/post/{id}, DELETE
+p, admin, /v1/file-upload, POST
+
+g, sudo, admin, (POST)|(PUT)|(PATCH)|(DELETE)|(GET)

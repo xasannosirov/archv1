@@ -4,9 +4,11 @@ import (
 	"archv1/internal/entity"
 	"archv1/internal/pkg/repo/postgres"
 	"context"
+	"database/sql"
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/lib/pq"
 	_ "github.com/lib/pq"
 )
 
@@ -165,6 +167,7 @@ func (r *Repo) List(ctx context.Context, filter entity.Filter, lang string) (ent
 	    parent_id, 
 	    slug, 
 	    path,
+	    status,
 	    files
 	FROM menus`, lang, lang)
 
@@ -193,6 +196,7 @@ func (r *Repo) List(ctx context.Context, filter entity.Filter, lang string) (ent
 			&menu.ParentID,
 			&menu.Slug,
 			&menu.Path,
+			&menu.Status,
 			&menu.Files,
 		)
 		if err != nil {
@@ -219,8 +223,8 @@ func (r *Repo) List(ctx context.Context, filter entity.Filter, lang string) (ent
 
 func (r *Repo) GetByID(ctx context.Context, menuID int, lang string) (entity.GetMenuResponse, error) {
 	var (
-		content  string
-		title    string
+		content  sql.NullString
+		title    sql.NullString
 		response entity.GetMenuResponse
 	)
 
@@ -234,11 +238,13 @@ func (r *Repo) GetByID(ctx context.Context, menuID int, lang string) (entity.Get
 	    parent_id, 
 	    slug, 
 	    path,
+	    status,
 	    files
 	FROM menus`, lang, lang)
 
-	whereQuery := ` WHERE deleted_at IS NULL AND and status = TRUE id = ?`
+	whereQuery := ` WHERE deleted_at IS NULL AND status = TRUE AND id = ?`
 
+	var files pq.StringArray
 	err := r.DB.QueryRowContext(ctx, selectQuery+whereQuery, menuID).Scan(
 		&response.ID,
 		&title,
@@ -248,14 +254,21 @@ func (r *Repo) GetByID(ctx context.Context, menuID int, lang string) (entity.Get
 		&response.ParentID,
 		&response.Slug,
 		&response.Path,
-		&response.Files,
+		&response.Status,
+		&files,
 	)
 	if err != nil {
 		return entity.GetMenuResponse{}, err
 	}
 
-	response.Title = map[string]string{lang: title}
-	response.Content = map[string]string{lang: content}
+	response.Files = files
+
+	if content.Valid {
+		response.Content = map[string]string{lang: content.String}
+	}
+	if title.Valid {
+		response.Title = map[string]string{lang: title.String}
+	}
 
 	return response, nil
 }
@@ -278,14 +291,15 @@ func (r *Repo) Create(ctx context.Context, menu entity.CreateMenuRequest) (entit
 
 	err = r.DB.NewInsert().
 		Model(&entity.Menus{
-			Title:    string(titleBytes),
-			Content:  string(contentBytes),
-			IsStatic: menu.IsStatic,
-			Sort:     menu.Sort,
-			ParentID: menu.ParentID,
-			Status:   menu.Status,
-			Slug:     menu.Slug,
-			Path:     menu.Path,
+			Title:     string(titleBytes),
+			Content:   string(contentBytes),
+			IsStatic:  menu.IsStatic,
+			Sort:      menu.Sort,
+			ParentID:  menu.ParentID,
+			Status:    menu.Status,
+			Slug:      menu.Slug,
+			Path:      menu.Path,
+			CreatedBy: &menu.CreatedBy,
 		}).
 		Returning("id, content, title, is_static, sort, parent_id, slug, path").
 		Scan(ctx,
@@ -330,15 +344,16 @@ func (r *Repo) Update(ctx context.Context, menu entity.UpdateMenuRequest) (entit
 	}
 
 	err = r.DB.NewUpdate().Model(&entity.Menus{
-		ID:       &menu.ID,
-		Title:    string(titleBytes),
-		Content:  string(contentBytes),
-		IsStatic: menu.IsStatic,
-		Sort:     menu.Sort,
-		ParentID: menu.ParentID,
-		Status:   menu.Status,
-		Slug:     menu.Slug,
-		Path:     menu.Path,
+		ID:        &menu.ID,
+		Title:     string(titleBytes),
+		Content:   string(contentBytes),
+		IsStatic:  menu.IsStatic,
+		Sort:      menu.Sort,
+		ParentID:  menu.ParentID,
+		Status:    menu.Status,
+		Slug:      menu.Slug,
+		Path:      menu.Path,
+		UpdatedBy: &menu.UpdatedBy,
 	}).
 		Where("deleted_at IS NULL AND status = TRUE AND id = ?", menu.ID).
 		Returning("id, content, title, is_static, sort, parent_id, slug, path").
@@ -400,6 +415,8 @@ func (r *Repo) UpdateColumns(ctx context.Context, fields entity.UpdateMenuColumn
 			updater.Set(key+" = ?", value)
 		}
 	}
+	updater.Set("updated_by = ?", fields.Fields["updated_by"])
+	updater.Set("updated_at = ?", fields.Fields["updated_at"])
 
 	err := updater.Where("deleted_at IS NULL AND status = TRUE AND id = ?", fields.ID).
 		Returning("id, title, content, is_static, sort, parent_id, slug, path").
@@ -462,13 +479,15 @@ func (r *Repo) AddFile(ctx context.Context, fileURL string, menuID int) error {
 
 	var files []string
 
-	if err := r.DB.QueryRowContext(ctx, selectQuery).Scan(&files); err != nil {
-		return err
+	if err := r.DB.QueryRowContext(ctx, selectQuery).Scan(pq.Array(&files)); err != nil {
+		if !errors.Is(err, sql.ErrNoRows) {
+			return err
+		}
 	}
 
 	files = append(files, fileURL)
 
-	insertQuery := fmt.Sprintf(`INSERT INTO menus (files) VALUES ('%v')`, files)
+	insertQuery := fmt.Sprintf(`UPDATE menus SET files = '%v' WHERE id = '%d'`, pq.Array(files), menuID)
 
 	result, err := r.DB.ExecContext(ctx, insertQuery)
 	if err != nil {

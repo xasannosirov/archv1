@@ -1,11 +1,11 @@
 package entity
 
 type Users struct {
-	ID        int     `json:"id" bun:"id"`
+	ID        *int    `json:"id" bun:"id"`
 	Username  string  `json:"username" bun:"username"`
 	Password  string  `json:"password" bun:"password"`
 	Role      string  `json:"role" bun:"role"`
-	Status    string  `json:"status" bun:"status"`
+	Status    bool    `json:"status" bun:"status"`
 	Refresh   *string `json:"refresh" bun:"refresh"`
 	CreatedBy *int    `json:"created_by" bun:"created_by"`
 	UpdatedBy *int    `json:"updated_by" bun:"updated_by"`
@@ -15,8 +15,8 @@ type CreateUserRequest struct {
 	Username  string `json:"username"`
 	Password  string `json:"password"`
 	Role      string `json:"role"`
-	Status    string `json:"status"`
-	CreatedBy int    `json:"created_by"`
+	Status    bool   `json:"status"`
+	CreatedBy int    `json:"-"`
 }
 
 type CreateUserResponse struct {
@@ -24,7 +24,7 @@ type CreateUserResponse struct {
 	Username string `json:"username"`
 	Password string `json:"password"`
 	Role     string `json:"role"`
-	Status   string `json:"status"`
+	Status   bool   `json:"status"`
 }
 
 type UpdateUserRequest struct {
@@ -32,8 +32,8 @@ type UpdateUserRequest struct {
 	Username  string `json:"username"`
 	Password  string `json:"password"`
 	Role      string `json:"role"`
-	Status    string `json:"status"`
-	UpdatedBy int    `json:"updated_by"`
+	Status    bool   `json:"status"`
+	UpdatedBy int    `json:"-"`
 }
 
 type UpdateUserResponse struct {
@@ -41,7 +41,7 @@ type UpdateUserResponse struct {
 	Username string `json:"username"`
 	Password string `json:"password"`
 	Role     string `json:"role"`
-	Status   string `json:"status"`
+	Status   bool   `json:"status"`
 	Refresh  string `json:"refresh"`
 }
 

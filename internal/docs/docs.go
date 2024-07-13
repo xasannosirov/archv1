@@ -186,9 +186,18 @@ const docTemplate = `{
                     {
                         "type": "file",
                         "description": "Upload file",
-                        "name": "request",
+                        "name": "file",
                         "in": "formData",
                         "required": true
+                    },
+                    {
+                        "description": "File Upload Model",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/entity.FileUploadRequest"
+                        }
                     }
                 ],
                 "responses": {
@@ -1151,6 +1160,18 @@ const docTemplate = `{
             "properties": {
                 "message": {
                     "type": "string"
+                }
+            }
+        },
+        "entity.FileUploadRequest": {
+            "type": "object",
+            "properties": {
+                "category": {
+                    "type": "string"
+                },
+                "object_id": {
+                    "description": "File     multipart.File ` + "`" + `json:\"file\"` + "`" + `",
+                    "type": "integer"
                 }
             }
         },

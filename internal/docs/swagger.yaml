@@ -89,6 +89,14 @@ definitions:
       message:
         type: string
     type: object
+  entity.FileUploadRequest:
+    properties:
+      category:
+        type: string
+      object_id:
+        description: File     multipart.File `json:"file"`
+        type: integer
+    type: object
   entity.FileUploadResponse:
     properties:
       file_url:
@@ -451,9 +459,15 @@ paths:
       parameters:
       - description: Upload file
         in: formData
-        name: request
+        name: file
         required: true
         type: file
+      - description: File Upload Model
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/entity.FileUploadRequest'
       produces:
       - application/json
       responses:

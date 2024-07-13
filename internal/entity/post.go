@@ -1,37 +1,56 @@
 package entity
 
 type Posts struct {
-	ID      int               `json:"id" bun:"id"`
-	Title   map[string]string `json:"title" bun:"title"`
-	Content map[string]string `json:"content" bun:"content"`
-	UserID  int               `json:"user_id" bun:"user_id"`
+	ID           int      `json:"id" bun:"id"`
+	Title        string   `json:"title" bun:"title"`
+	Content      string   `json:"content" bun:"content"`
+	ShortContent string   `json:"short_content" bun:"short_content"`
+	Slug         string   `json:"slug" bun:"slug"`
+	Status       bool     `json:"status" bun:"status"`
+	UserID       int      `json:"user_id" bun:"user_id"`
+	Files        []string `json:"files" bun:"files"`
 }
 
 type CreatePostRequest struct {
-	Title   map[string]string `json:"title" bun:"title"`
-	Content map[string]string `json:"content" bun:"content"`
-	UserID  int               `json:"user_id" bun:"user_id"`
+	Title        map[string]string `json:"title"`
+	Content      map[string]string `json:"content" bun:"content"`
+	ShortContent map[string]string `json:"short_content" bun:"short_content"`
+	Slug         string            `json:"slug" bun:"slug"`
+	Status       bool              `json:"status" bun:"status"`
+	UserID       int               `json:"user_id" bun:"user_id"`
 }
 
 type CreatePostResponse struct {
-	ID      int               `json:"id" bun:"id"`
-	Title   map[string]string `json:"title" bun:"title"`
-	Content map[string]string `json:"content" bun:"content"`
-	UserID  int               `json:"user_id" bun:"user_id"`
+	ID           int               `json:"id" bun:"id"`
+	Title        map[string]string `json:"title" bun:"title"`
+	Content      map[string]string `json:"content" bun:"content"`
+	ShortContent map[string]string `json:"short_content" bun:"short_content"`
+	Slug         string            `json:"slug" bun:"slug"`
+	Status       bool              `json:"status" bun:"status"`
+	UserID       int               `json:"user_id" bun:"user_id"`
+	Files        []string          `json:"files" bun:"files"`
 }
 
 type UpdatePostRequest struct {
-	ID      int               `json:"id" bun:"id"`
-	Title   map[string]string `json:"title" bun:"title"`
-	Content map[string]string `json:"content" bun:"content"`
-	UserID  int               `json:"user_id" bun:"user_id"`
+	ID           int               `json:"id" bun:"id"`
+	Title        map[string]string `json:"title" bun:"title"`
+	Content      map[string]string `json:"content" bun:"content"`
+	ShortContent map[string]string `json:"short_content" bun:"short_content"`
+	Slug         string            `json:"slug" bun:"slug"`
+	Status       bool              `json:"status" bun:"status"`
+	UserID       int               `json:"user_id" bun:"user_id"`
+	Files        []string          `json:"files" bun:"files"`
 }
 
 type UpdatePostResponse struct {
-	ID      int               `json:"id" bun:"id"`
-	Title   map[string]string `json:"title" bun:"title"`
-	Content map[string]string `json:"content" bun:"content"`
-	UserID  int               `json:"user_id" bun:"user_id"`
+	ID           int               `json:"id" bun:"id"`
+	Title        map[string]string `json:"title" bun:"title"`
+	Content      map[string]string `json:"content" bun:"content"`
+	ShortContent map[string]string `json:"short_content" bun:"short_content"`
+	Slug         string            `json:"slug" bun:"slug"`
+	Status       bool              `json:"status" bun:"status"`
+	UserID       int               `json:"user_id" bun:"user_id"`
+	Files        []string          `json:"files" bun:"files"`
 }
 
 type UpdatePostColumnsRequest struct {
@@ -44,10 +63,14 @@ type DeletePostResponse struct {
 }
 
 type GetPostResponse struct {
-	ID      int               `json:"id" bun:"id"`
-	Title   map[string]string `json:"title" bun:"title"`
-	Content map[string]string `json:"content" bun:"content"`
-	UserID  int               `json:"user_id" bun:"user_id"`
+	ID           int               `json:"id" bun:"id"`
+	Title        map[string]string `json:"title" bun:"title"`
+	Content      map[string]string `json:"content" bun:"content"`
+	ShortContent map[string]string `json:"short_content" bun:"short_content"`
+	Slug         string            `json:"slug" bun:"slug"`
+	Status       bool              `json:"status" bun:"status"`
+	UserID       int               `json:"user_id" bun:"user_id"`
+	Files        []string          `json:"files" bun:"files"`
 }
 
 type ListPostResponse struct {

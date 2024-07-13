@@ -164,10 +164,11 @@ func (r *Repo) List(ctx context.Context, filter entity.Filter, lang string) (ent
 	    sort, 
 	    parent_id, 
 	    slug, 
-	    path 
+	    path,
+	    files
 	FROM menus`, lang, lang)
 
-	whereQuery := ` WHERE deleted_at IS NULL`
+	whereQuery := ` WHERE deleted_at IS NULL AND status = TRUE`
 
 	limitQuery := fmt.Sprintf(" LIMIT %d OFFSET %d", filter.Limit, offset)
 
@@ -192,6 +193,7 @@ func (r *Repo) List(ctx context.Context, filter entity.Filter, lang string) (ent
 			&menu.ParentID,
 			&menu.Slug,
 			&menu.Path,
+			&menu.Files,
 		)
 		if err != nil {
 			return entity.ListMenuResponse{}, err
@@ -207,7 +209,7 @@ func (r *Repo) List(ctx context.Context, filter entity.Filter, lang string) (ent
 		return entity.ListMenuResponse{}, err
 	}
 
-	totalQuery := `SELECT COUNT(*) FROM menus WHERE deleted_at IS NULL`
+	totalQuery := `SELECT COUNT(*) FROM menus WHERE deleted_at IS NULL AND status = TRUE`
 	if err := r.DB.QueryRowContext(ctx, totalQuery).Scan(&response.Total); err != nil {
 		return entity.ListMenuResponse{}, err
 	}
@@ -231,12 +233,13 @@ func (r *Repo) GetByID(ctx context.Context, menuID int, lang string) (entity.Get
 	    sort, 
 	    parent_id, 
 	    slug, 
-	    path 
+	    path,
+	    files
 	FROM menus`, lang, lang)
 
-	whereQuery := ` WHERE deleted_at IS NULL AND id = ?`
+	whereQuery := ` WHERE deleted_at IS NULL AND and status = TRUE id = ?`
 
-	err := r.DB.QueryRow(selectQuery+whereQuery, menuID).Scan(
+	err := r.DB.QueryRowContext(ctx, selectQuery+whereQuery, menuID).Scan(
 		&response.ID,
 		&title,
 		&content,
@@ -245,6 +248,7 @@ func (r *Repo) GetByID(ctx context.Context, menuID int, lang string) (entity.Get
 		&response.ParentID,
 		&response.Slug,
 		&response.Path,
+		&response.Files,
 	)
 	if err != nil {
 		return entity.GetMenuResponse{}, err
@@ -378,14 +382,14 @@ func (r *Repo) UpdateColumns(ctx context.Context, fields entity.UpdateMenuColumn
 				return entity.UpdateMenuResponse{}, err
 			}
 
-			updater.Set(key+" = ?", titleBytes)
+			updater.Set(key+" = ?", string(titleBytes))
 		} else if key == "content" {
 			contentBytes, err := json.Marshal(value)
 			if err != nil {
 				return entity.UpdateMenuResponse{}, err
 			}
 
-			updater.Set(key+" = ?", contentBytes)
+			updater.Set(key+" = ?", string(contentBytes))
 		} else if key == "is_static" {
 			updater.Set(key+" = ?", value)
 		} else if key == "parent_id" {

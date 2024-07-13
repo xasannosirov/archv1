@@ -27,7 +27,7 @@ type FileController struct {
 	PostUseCase post.PostUseCaseI
 }
 
-func NewFileController(controller FileController) *FileController {
+func NewFileController(controller *FileController) *FileController {
 	return &FileController{
 		Conf:        controller.Conf,
 		Postgres:    controller.Postgres,
@@ -45,7 +45,7 @@ func NewFileController(controller FileController) *FileController {
 // @Accept      multipart/form-data
 // @Produce     json
 // @Param		file formData file true "Upload file"
-// @Param 		request body entity.FileUploadRequest true
+// @Param 		request body entity.FileUploadRequest true "File Upload Model"
 // @Success     200 {object} entity.FileUploadResponse
 // @Failure 	400 {object} errors.Error
 // @Failure 	401 {object} errors.Error

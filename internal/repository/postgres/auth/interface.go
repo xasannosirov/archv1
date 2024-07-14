@@ -9,4 +9,5 @@ type AuthRepository interface {
 	UniqueUsername(ctx context.Context, username string) (bool, error)
 	UpdateToken(ctx context.Context, id int, token string) error
 	GetUserByUsername(ctx context.Context, username string) (entity.GetUserResponse, error)
+	GetUserByToken(ctx context.Context, token string) (entity.GetUserResponse, error)
 }

@@ -27,3 +27,7 @@ func (a *AuthUseCase) UpdateToken(ctx context.Context, id int, token string) err
 func (a *AuthUseCase) GetUserByUsername(ctx context.Context, username string) (entity.GetUserResponse, error) {
 	return a.authService.GetUserByUsername(ctx, username)
 }
+
+func (a *AuthUseCase) GetUserByToken(ctx context.Context, token string) (entity.GetUserResponse, error) {
+	return a.authService.GetUserByToken(ctx, token)
+}

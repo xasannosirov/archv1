@@ -27,6 +27,4 @@ func main() {
 	if err := engine.Run(fmt.Sprintf("%s:%s", cfg.HttpHost, cfg.HttpPort)); err != nil {
 		log.Fatal(err)
 	}
-
-	log.Fatal("server exit")
 }

@@ -477,17 +477,18 @@ func (r *Repo) AddFile(ctx context.Context, fileURL string, menuID int) error {
 		`SELECT files FROM menus WHERE deleted_at IS NULL AND status = TRUE AND id = '%d'`, menuID,
 	)
 
-	var files []string
+	var files pq.StringArray
 
-	if err := r.DB.QueryRowContext(ctx, selectQuery).Scan(pq.Array(&files)); err != nil {
+	if err := r.DB.QueryRowContext(ctx, selectQuery).Scan(&files); err != nil {
 		if !errors.Is(err, sql.ErrNoRows) {
 			return err
 		}
 	}
 
-	files = append(files, fileURL)
+	filesSlice := []string(files)
+	filesSlice = append(filesSlice, fileURL)
 
-	insertQuery := fmt.Sprintf(`UPDATE menus SET files = '%v' WHERE id = '%d'`, pq.Array(files), menuID)
+	insertQuery := fmt.Sprintf(`UPDATE menus SET files = '%v' WHERE id = '%d'`, pq.Array(filesSlice), menuID)
 
 	result, err := r.DB.ExecContext(ctx, insertQuery)
 	if err != nil {

@@ -81,3 +81,32 @@ func (r *Repo) GetUserByUsername(ctx context.Context, username string) (entity.G
 
 	return response, nil
 }
+
+func (r *Repo) GetUserByToken(ctx context.Context, token string) (entity.GetUserResponse, error) {
+	var response entity.GetUserResponse
+
+	selectQuery := fmt.Sprintf(`
+	SELECT 
+	    id, 
+	    username, 
+	    password, 
+	    role, 
+	    status, 
+	    refresh 
+	FROM users 
+	WHERE refresh = ? AND deleted_at IS NULL AND status = TRUE`)
+
+	err := r.DB.QueryRowContext(ctx, selectQuery, token).Scan(
+		&response.Id,
+		&response.Username,
+		&response.Password,
+		&response.Role,
+		&response.Status,
+		&response.Refresh,
+	)
+	if err != nil {
+		return entity.GetUserResponse{}, err
+	}
+
+	return response, nil
+}

@@ -11,7 +11,6 @@ import (
 	"archv1/internal/usecase/auth"
 	"archv1/internal/usecase/user"
 	"context"
-	"fmt"
 	"github.com/casbin/casbin/v2"
 	"github.com/gin-gonic/gin"
 	"github.com/spf13/cast"
@@ -113,7 +112,7 @@ func (a *ControllerAuth) Register(c *gin.Context) {
 		ID:           userResponse.Id,
 		Username:     userResponse.Username,
 		Role:         userResponse.Role,
-		Status:       true,
+		Status:       userResponse.Status,
 		AccessToken:  access,
 		RefreshToken: refresh,
 	})
@@ -144,6 +143,12 @@ func (a *ControllerAuth) Login(c *gin.Context) {
 	userResponse, err := a.AuthUseCase.GetUserByUsername(context.Background(), request.Username)
 	if err != nil {
 		errors.ErrorResponse(c, http.StatusNotFound, err.Error())
+
+		return
+	}
+
+	if !bcrypt.CheckPasswordHash(request.Password, userResponse.Password) {
+		errors.ErrorResponse(c, http.StatusBadRequest, "Password is incorrect")
 
 		return
 	}
@@ -193,9 +198,15 @@ func (a *ControllerAuth) Login(c *gin.Context) {
 // @Router 			/v1/auth/new-access/{refresh} [GET]
 func (a *ControllerAuth) NewAccessToken(c *gin.Context) {
 	refreshToken := c.Param("refresh")
-	fmt.Println(refreshToken)
 
-	claims, err := tokens.ExtractClaim(refreshToken, []byte(a.Conf.JWTSecret))
+	userResponse, err := a.AuthUseCase.GetUserByToken(context.Background(), refreshToken)
+	if err != nil {
+		errors.ErrorResponse(c, http.StatusNotFound, err.Error())
+
+		return
+	}
+
+	claims, err := tokens.ExtractClaim(*userResponse.Refresh, []byte(a.Conf.JWTSecret))
 	if err != nil {
 		errors.ErrorResponse(c, http.StatusUnauthorized, err.Error())
 
@@ -204,16 +215,9 @@ func (a *ControllerAuth) NewAccessToken(c *gin.Context) {
 
 	userID := cast.ToInt(claims["sub"])
 
-	userInfo, err := a.UserUseCase.GetByID(context.Background(), userID)
-	if err != nil {
-		errors.ErrorResponse(c, http.StatusInternalServerError, err.Error())
-
-		return
-	}
-
 	jwtHandler := tokens.JWTHandler{
-		Sub:        userInfo.Id,
-		Role:       userInfo.Role,
+		Sub:        userID,
+		Role:       userResponse.Role,
 		SigningKey: a.Conf.JWTSecret,
 	}
 
@@ -224,7 +228,7 @@ func (a *ControllerAuth) NewAccessToken(c *gin.Context) {
 		return
 	}
 
-	err = a.AuthUseCase.UpdateToken(context.Background(), userInfo.Id, refresh)
+	err = a.AuthUseCase.UpdateToken(context.Background(), userResponse.Id, refresh)
 	if err != nil {
 		errors.ErrorResponse(c, http.StatusInternalServerError, err.Error())
 
@@ -232,10 +236,10 @@ func (a *ControllerAuth) NewAccessToken(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, entity.NewAccessTokenResponse{
-		ID:           userInfo.Id,
-		Username:     userInfo.Username,
-		Role:         userInfo.Role,
-		Status:       userInfo.Status,
+		ID:           userResponse.Id,
+		Username:     userResponse.Username,
+		Role:         userResponse.Role,
+		Status:       userResponse.Status,
 		AccessToken:  access,
 		RefreshToken: refresh,
 	})

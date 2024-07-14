@@ -1549,7 +1549,7 @@
                 "id": {
                     "type": "integer"
                 },
-                "password": {
+                "refresh": {
                     "type": "string"
                 },
                 "role": {
@@ -2074,6 +2074,9 @@
                 "password": {
                     "type": "string"
                 },
+                "refresh": {
+                    "type": "string"
+                },
                 "role": {
                     "type": "string"
                 },
@@ -2090,9 +2093,6 @@
             "properties": {
                 "id": {
                     "type": "integer"
-                },
-                "password": {
-                    "type": "string"
                 },
                 "refresh": {
                     "type": "string"

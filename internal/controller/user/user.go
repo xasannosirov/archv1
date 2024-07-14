@@ -2,11 +2,13 @@ package user_controller
 
 import (
 	"archv1/internal/entity"
+	"archv1/internal/pkg/bcrypt"
 	"archv1/internal/pkg/config"
 	"archv1/internal/pkg/errors"
 	"archv1/internal/pkg/repo/postgres"
 	"archv1/internal/pkg/repo/redis"
 	"archv1/internal/pkg/utils"
+	"archv1/internal/usecase/auth"
 	"archv1/internal/usecase/user"
 	"context"
 	"github.com/spf13/cast"
@@ -24,6 +26,7 @@ type ControllerUser struct {
 	RedisDB     *redis.Redis
 	Enforcer    *casbin.Enforcer
 	UserUseCase user.UserUseCaseI
+	AuthUseCase auth.AuthUseCaseI
 }
 
 func NewUserController(option *ControllerUser) ControllerUser {
@@ -33,6 +36,7 @@ func NewUserController(option *ControllerUser) ControllerUser {
 		RedisDB:     option.RedisDB,
 		Enforcer:    option.Enforcer,
 		UserUseCase: option.UserUseCase,
+		AuthUseCase: option.AuthUseCase,
 	}
 }
 
@@ -127,6 +131,18 @@ func (u *ControllerUser) Create(c *gin.Context) {
 		return
 	}
 
+	status, err := u.AuthUseCase.UniqueUsername(context.Background(), request.Username)
+	if err != nil {
+		errors.ErrorResponse(c, http.StatusBadRequest, err.Error())
+
+		return
+	}
+	if status {
+		errors.ErrorResponse(c, http.StatusBadRequest, "Username is already taken")
+
+		return
+	}
+
 	claims, err := utils.GetTokenClaimsFromHeader(c.Request, u.Conf)
 	if err != nil {
 		errors.ErrorResponse(c, http.StatusUnauthorized, err.Error())
@@ -134,6 +150,14 @@ func (u *ControllerUser) Create(c *gin.Context) {
 		return
 	}
 
+	hashedPwd, err := bcrypt.HashPassword(request.Password)
+	if err != nil {
+		errors.ErrorResponse(c, http.StatusInternalServerError, err.Error())
+
+		return
+	}
+
+	request.Password = hashedPwd
 	request.CreatedBy = cast.ToInt(claims["sub"])
 
 	userRole := strings.ToLower(request.Role)
@@ -191,12 +215,19 @@ func (u *ControllerUser) Update(c *gin.Context) {
 		return
 	}
 
+	hashedPwd, err := bcrypt.HashPassword(request.Password)
+	if err != nil {
+		errors.ErrorResponse(c, http.StatusInternalServerError, err.Error())
+
+		return
+	}
+
+	request.Password = hashedPwd
 	request.UpdatedBy = cast.ToInt(claims["sub"])
 
 	userResponse, err := u.UserUseCase.Update(context.Background(), request)
 	if err != nil {
 		errors.ErrorResponse(c, http.StatusInternalServerError, err.Error())
-
 		return
 	}
 

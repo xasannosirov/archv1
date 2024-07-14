@@ -27,3 +27,7 @@ func (a *AuthService) UpdateToken(ctx context.Context, id int, token string) err
 func (a *AuthService) GetUserByUsername(ctx context.Context, username string) (entity.GetUserResponse, error) {
 	return a.authRepo.GetUserByUsername(ctx, username)
 }
+
+func (a *AuthService) GetUserByToken(ctx context.Context, token string) (entity.GetUserResponse, error) {
+	return a.authRepo.GetUserByToken(ctx, token)
+}

@@ -86,6 +86,7 @@ func New(option *Router) *gin.Engine {
 		RedisDB:     option.RedisCache,
 		Enforcer:    option.Enforcer,
 		UserUseCase: userUseCaseI,
+		AuthUseCase: authUseCaseI,
 	})
 
 	menuController := menuCont.NewMenuController(&menuCont.ControllerMenu{

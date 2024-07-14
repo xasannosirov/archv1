@@ -1560,7 +1560,7 @@ const docTemplate = `{
                 "id": {
                     "type": "integer"
                 },
-                "password": {
+                "refresh": {
                     "type": "string"
                 },
                 "role": {
@@ -2085,6 +2085,9 @@ const docTemplate = `{
                 "password": {
                     "type": "string"
                 },
+                "refresh": {
+                    "type": "string"
+                },
                 "role": {
                     "type": "string"
                 },
@@ -2101,9 +2104,6 @@ const docTemplate = `{
             "properties": {
                 "id": {
                     "type": "integer"
-                },
-                "password": {
-                    "type": "string"
                 },
                 "refresh": {
                     "type": "string"

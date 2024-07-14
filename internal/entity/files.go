@@ -2,8 +2,7 @@ package entity
 
 type FileUploadRequest struct {
 	Category string `json:"category"`
-	//File     multipart.File `json:"file"`
-	ObjectID int `json:"object_id"`
+	ObjectID int    `json:"object_id"`
 }
 
 type FileUploadResponse struct {

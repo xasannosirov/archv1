@@ -114,7 +114,7 @@ definitions:
     properties:
       id:
         type: integer
-      password:
+      refresh:
         type: string
       role:
         type: string
@@ -456,6 +456,8 @@ definitions:
         type: integer
       password:
         type: string
+      refresh:
+        type: string
       role:
         type: string
       status:
@@ -467,8 +469,6 @@ definitions:
     properties:
       id:
         type: integer
-      password:
-        type: string
       refresh:
         type: string
       role:

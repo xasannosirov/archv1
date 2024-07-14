@@ -113,8 +113,14 @@ func (r *Repo) Create(ctx context.Context, user entity.CreateUserRequest) (entit
 			Role:     user.Role,
 			Status:   user.Status,
 		}).
-		Returning("id, username, password, role, status").
-		Scan(ctx, &response.Id, &response.Username, &response.Password, &response.Role, &response.Status)
+		Returning("id, username, role, status, refresh").
+		Scan(ctx,
+			&response.Id,
+			&response.Username,
+			&response.Role,
+			&response.Status,
+			&response.Refresh,
+		)
 
 	if err != nil {
 		return entity.CreateUserResponse{}, err
@@ -134,20 +140,19 @@ func (r *Repo) Update(ctx context.Context, user entity.UpdateUserRequest) (entit
 	var response entity.UpdateUserResponse
 
 	err := r.DB.NewUpdate().
-		Model(&entity.Users{
-			ID:        &user.Id,
-			Username:  user.Username,
-			Password:  user.Password,
-			Role:      user.Role,
-			Status:    user.Status,
-			UpdatedBy: &user.UpdatedBy,
-		}).Where("deleted_at IS NULL AND status = TRUE AND id = ?", user.Id).
-		Returning("id, username, password, role, status, refresh").
+		Table("users").
+		Set("username = ?", user.Username).
+		Set("password = ?", user.Password).
+		Set("role = ?", user.Role).
+		Set("status = ?", user.Status).
+		Set("updated_by = ?", user.UpdatedBy).
+		Set("updated_at = NOW()").
+		Where("deleted_at IS NULL AND status = TRUE AND id = ?", user.Id).
+		Returning("id, username, role, status, refresh").
 		Scan(
 			ctx,
 			&response.Id,
 			&response.Username,
-			&response.Password,
 			&response.Role,
 			&response.Status,
 			&response.Refresh,
@@ -182,12 +187,11 @@ func (r *Repo) UpdateColumns(ctx context.Context, request entity.UpdateUserColum
 	updater.Set("updated_by = ?", request.Fields["updated_by"])
 
 	err := updater.Where("deleted_at IS NULL AND status = TRUE AND id = ?", request.ID).
-		Returning("id, username, password, role, status, refresh").
+		Returning("id, username, role, status, refresh").
 		Scan(
 			ctx,
 			&response.Id,
 			&response.Username,
-			&response.Password,
 			&response.Role,
 			&response.Status,
 			&response.Refresh,
@@ -205,7 +209,7 @@ func (r *Repo) Delete(ctx context.Context, userID, deletedBy int) (entity.Delete
 		Set("deleted_at = NOW()").
 		Set("deleted_by = ?", deletedBy).
 		Table("users").
-		Where("deleted_at IS NULL AND id = ?", userID).
+		Where("deleted_at IS NULL AND id = ? AND status = TRUE", userID).
 		Exec(ctx)
 
 	if err != nil {

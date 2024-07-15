@@ -585,6 +585,49 @@ paths:
       summary: Register
       tags:
       - auth
+  /v1/files/download:
+    get:
+      consumes:
+      - application/json
+      description: This API for getting file with url
+      parameters:
+      - description: File URL
+        in: query
+        name: url
+        required: true
+        type: string
+      produces:
+      - multipart/form-data
+      responses:
+        "200":
+          description: File Download
+          schema:
+            type: file
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/errors.Error'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/errors.Error'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/errors.Error'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/errors.Error'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/errors.Error'
+      security:
+      - BearerAuth: []
+      summary: Get File
+      tags:
+      - file
   /v1/files/upload:
     post:
       consumes:
@@ -629,6 +672,8 @@ paths:
           description: Internal Server Error
           schema:
             $ref: '#/definitions/errors.Error'
+      security:
+      - BearerAuth: []
       summary: Upload File
       tags:
       - file

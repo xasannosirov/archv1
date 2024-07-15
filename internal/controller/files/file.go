@@ -6,12 +6,14 @@ import (
 	"archv1/internal/pkg/errors"
 	"archv1/internal/pkg/repo/postgres"
 	"archv1/internal/pkg/repo/redis"
+	"archv1/internal/pkg/utils"
 	"archv1/internal/usecase/menu"
 	"archv1/internal/usecase/post"
 	"context"
 	"github.com/casbin/casbin/v2"
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
+	"github.com/spf13/cast"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -39,20 +41,21 @@ func NewFileController(controller *FileController) *FileController {
 }
 
 // UploadFile
-// @Summary     Upload File
-// @Description This API for upload a file
-// @Tags  	    file
-// @Accept      multipart/form-data
-// @Produce     json
-// @Param		file formData file true "Upload file"
-// @Param 		category query string true "Category"
-// @Param 		id query string true "Object ID"
-// @Success     200 {object} entity.FileUploadResponse
-// @Failure 	400 {object} errors.Error
-// @Failure 	401 {object} errors.Error
-// @Failure 	403 {object} errors.Error
-// @Failure     500 {object} errors.Error
-// @Router 		/v1/files/upload [POST]
+// @Summary     	Upload File
+// @Security 		BearerAuth
+// @Description 	This API for upload a file
+// @Tags  	    	file
+// @Accept      	multipart/form-data
+// @Produce     	json
+// @Param			file formData file true "Upload file"
+// @Param 			category query string true "Category"
+// @Param 			id query string true "Object ID"
+// @Success     	200 {object} entity.FileUploadResponse
+// @Failure 		400 {object} errors.Error
+// @Failure 		401 {object} errors.Error
+// @Failure 		403 {object} errors.Error
+// @Failure     	500 {object} errors.Error
+// @Router 			/v1/files/upload [POST]
 func (f *FileController) UploadFile(c *gin.Context) {
 	file, err := c.FormFile("file")
 	if err != nil {
@@ -64,7 +67,7 @@ func (f *FileController) UploadFile(c *gin.Context) {
 	category := c.Query("category")
 	id := c.Query("id")
 
-	intId, err := strconv.Atoi(id)
+	objectID, err := strconv.Atoi(id)
 	if err != nil {
 		errors.ErrorResponse(c, http.StatusBadRequest, "invalid file id")
 
@@ -88,7 +91,6 @@ func (f *FileController) UploadFile(c *gin.Context) {
 
 	uid := uuid.NewString()
 	ext := filepath.Ext(file.Filename)
-	addr := "localhost:8080/"
 
 	savePath := filepath.Join(uploadDir, uid+ext)
 	err = c.SaveUploadedFile(file, savePath)
@@ -98,17 +100,26 @@ func (f *FileController) UploadFile(c *gin.Context) {
 		return
 	}
 
-	filePath := addr + savePath
+	claims, err := utils.GetTokenClaimsFromHeader(c.Request, f.Conf)
+	if err != nil {
+		errors.ErrorResponse(c, http.StatusUnauthorized, err.Error())
+
+		return
+	}
+
+	userID := cast.ToInt(claims["sub"])
+
+	filePath := uid + ext
 
 	if category == "menu" {
-		err = f.MenuUseCase.AddFile(context.Background(), filePath, intId)
+		err = f.MenuUseCase.AddFile(context.Background(), filePath, objectID, userID)
 		if err != nil {
 			errors.ErrorResponse(c, http.StatusInternalServerError, err.Error())
 
 			return
 		}
 	} else {
-		err = f.PostUseCase.AddFile(context.Background(), filePath, intId)
+		err = f.PostUseCase.AddFile(context.Background(), filePath, objectID, userID)
 		if err != nil {
 			errors.ErrorResponse(c, http.StatusInternalServerError, err.Error())
 
@@ -119,4 +130,35 @@ func (f *FileController) UploadFile(c *gin.Context) {
 	c.JSON(http.StatusOK, entity.FileUploadResponse{
 		FileURL: filePath,
 	})
+}
+
+// GetFile
+// @Summary 		Get File
+// @Security 		BearerAuth
+// @Description 	This API for getting file with url
+// @Tags			file
+// @Accept 			json
+// @Produce 		multipart/form-data
+// @Param 			url query string true "File URL"
+// @Success 		200 {file} form-data "File Download"
+// @Failure 		400 {object} errors.Error
+// @Failure 		401 {object} errors.Error
+// @Failure 		403 {object} errors.Error
+// @Failure 		404 {object} errors.Error
+// @Failure 		500 {object} errors.Error
+// @Router 			/v1/files/download [GET]
+func (f *FileController) GetFile(c *gin.Context) {
+	baseURL := "./internal/files/"
+
+	fileURL := c.Query("url")
+
+	file, err := os.Open(baseURL + fileURL)
+	if err != nil {
+		errors.ErrorResponse(c, http.StatusInternalServerError, err.Error())
+
+		return
+	}
+	defer file.Close()
+
+	c.File(baseURL + fileURL)
 }

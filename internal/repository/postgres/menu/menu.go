@@ -464,12 +464,14 @@ func (r *Repo) Delete(ctx context.Context, menuID, deletedBy int) (entity.Delete
 	}, nil
 }
 
-func (r *Repo) AddFile(ctx context.Context, fileURL string, menuID int) error {
+func (r *Repo) AddFile(ctx context.Context, fileURL string, menuID, updatedBy int) error {
 	updateQuery := fmt.Sprintf(`
 	UPDATE menus 
-	SET files = array_append(files, '%v')
+	SET 
+	    files = array_append(files, '%v'),
+	    updated_by = '%d'
 	WHERE deleted_at IS NULL AND status = TRUE AND id = '%d'
-	`, fileURL, menuID)
+	`, fileURL, updatedBy, menuID)
 
 	result, err := r.DB.ExecContext(ctx, updateQuery)
 	if err != nil {

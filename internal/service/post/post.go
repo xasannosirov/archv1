@@ -40,6 +40,6 @@ func (r *PostService) Delete(ctx context.Context, postID, deletedBy int) (entity
 	return r.postRepo.Delete(ctx, postID, deletedBy)
 }
 
-func (r *PostService) AddFile(ctx context.Context, fileURL string, postID int) error {
-	return r.postRepo.AddFile(ctx, fileURL, postID)
+func (r *PostService) AddFile(ctx context.Context, fileURL string, postID, updatedBy int) error {
+	return r.postRepo.AddFile(ctx, fileURL, postID, updatedBy)
 }

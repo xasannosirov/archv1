@@ -339,12 +339,14 @@ func (r *Repo) Delete(ctx context.Context, postID, deletedBy int) (entity.Delete
 	}, nil
 }
 
-func (r *Repo) AddFile(ctx context.Context, fileURL string, postID int) error {
+func (r *Repo) AddFile(ctx context.Context, fileURL string, postID, updatedBy int) error {
 	updateQuery := fmt.Sprintf(`
 	UPDATE posts 
-	SET files = array_append(files, '%v')
+	SET 
+	    files = array_append(files, '%v'),
+	    updated_by = '%d'
 	WHERE deleted_at IS NULL AND status = TRUE AND id = '%d'
-	`, fileURL, postID)
+	`, fileURL, updatedBy, postID)
 
 	result, err := r.DB.ExecContext(ctx, updateQuery)
 	if err != nil {

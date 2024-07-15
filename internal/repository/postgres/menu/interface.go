@@ -13,5 +13,5 @@ type MenuRepository interface {
 	Update(ctx context.Context, menu entity.UpdateMenuRequest) (entity.UpdateMenuResponse, error)
 	UpdateColumns(ctx context.Context, menu entity.UpdateMenuColumnsRequest) (entity.UpdateMenuResponse, error)
 	Delete(ctx context.Context, menuID, deletedBy int) (entity.DeleteMenuResponse, error)
-	AddFile(ctx context.Context, fileURL string, menuID int) error
+	AddFile(ctx context.Context, fileURL string, menuID, updatedBy int) error
 }

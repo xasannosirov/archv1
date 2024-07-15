@@ -79,6 +79,6 @@ func (u *MenuUseCase) Delete(ctx context.Context, menuID, deletedBy int) (entity
 	return menuResponse, nil
 }
 
-func (u *MenuUseCase) AddFile(ctx context.Context, fileURL string, menuID int) error {
-	return u.menuService.AddFile(ctx, fileURL, menuID)
+func (u *MenuUseCase) AddFile(ctx context.Context, fileURL string, menuID, updatedBy int) error {
+	return u.menuService.AddFile(ctx, fileURL, menuID, updatedBy)
 }

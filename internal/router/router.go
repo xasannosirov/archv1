@@ -155,6 +155,7 @@ func New(option *Router) *gin.Engine {
 
 	// File APIs
 	apiV1.POST("/files/upload", fileController.UploadFile)
+	apiV1.GET("/files/download", fileController.GetFile)
 
 	url := ginSwagger.URL("swagger/doc.json")
 	apiV1.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler, url))

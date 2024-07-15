@@ -12,5 +12,5 @@ type PostRepository interface {
 	Update(ctx context.Context, post entity.UpdatePostRequest) (entity.UpdatePostResponse, error)
 	UpdateColumns(ctx context.Context, post entity.UpdatePostColumnsRequest) (entity.UpdatePostResponse, error)
 	Delete(ctx context.Context, postID, deletedBy int) (entity.DeletePostResponse, error)
-	AddFile(ctx context.Context, fileURL string, postID int) error
+	AddFile(ctx context.Context, fileURL string, postID, updatedBy int) error
 }

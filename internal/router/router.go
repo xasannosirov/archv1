@@ -2,6 +2,7 @@ package router
 
 import (
 	authCont "archv1/internal/controller/auth"
+	fileStoreCont "archv1/internal/controller/fileStore"
 	fileCont "archv1/internal/controller/files"
 	menuCont "archv1/internal/controller/menu"
 	postCont "archv1/internal/controller/post"
@@ -11,14 +12,17 @@ import (
 	"archv1/internal/pkg/repo/postgres"
 	"archv1/internal/pkg/repo/redis"
 	authRepo "archv1/internal/repository/postgres/auth"
+	fileStoreRepo "archv1/internal/repository/postgres/fileStore"
 	menuRepo "archv1/internal/repository/postgres/menu"
 	postRepo "archv1/internal/repository/postgres/post"
 	userRepo "archv1/internal/repository/postgres/user"
 	authService "archv1/internal/service/auth"
+	fileStoreService "archv1/internal/service/fileStore"
 	menuService "archv1/internal/service/menu"
 	postService "archv1/internal/service/post"
 	userService "archv1/internal/service/user"
 	authUseCase "archv1/internal/usecase/auth"
+	fileStoreUseCase "archv1/internal/usecase/fileStore"
 	menuUseCase "archv1/internal/usecase/menu"
 	postUseCase "archv1/internal/usecase/post"
 	userUseCase "archv1/internal/usecase/user"
@@ -69,16 +73,19 @@ func New(option *Router) *gin.Engine {
 	menuRepository := menuRepo.NewMenuRepo(option.PostgresDB)
 	authRepository := authRepo.NewAuthRepo(option.PostgresDB)
 	postRepository := postRepo.NewPostRepo(option.PostgresDB)
+	fileStoreRepository := fileStoreRepo.NewFileStoreRepo(option.PostgresDB)
 
 	userServiceI := userService.NewUserService(userRepository)
 	menuServiceI := menuService.NewMenuService(menuRepository)
 	authServiceI := authService.NewAuthService(authRepository)
 	postServiceI := postService.NewPostService(postRepository)
+	fileStoreServiceI := fileStoreService.NewFilesStoreService(fileStoreRepository)
 
 	userUseCaseI := userUseCase.NewUserUseCase(userServiceI)
 	menuUseCaseI := menuUseCase.NewMenuUseCase(menuServiceI)
 	authUseCaseI := authUseCase.NewAuthUseCase(authServiceI)
 	postUseCaseI := postUseCase.NewPostUseCase(postServiceI)
+	fileStoreUseCaseI := fileStoreUseCase.NewFilesStoreUseCase(fileStoreServiceI)
 
 	userController := userCont.NewUserController(&userCont.ControllerUser{
 		Conf:        option.Conf,
@@ -123,6 +130,14 @@ func New(option *Router) *gin.Engine {
 		MenuUseCase: menuUseCaseI,
 	})
 
+	filesStoreController := fileStoreCont.NewFileStoreController(fileStoreCont.ControllerFileStore{
+		Conf:        option.Conf,
+		Postgres:    option.PostgresDB,
+		Redis:       option.RedisCache,
+		Enforcer:    option.Enforcer,
+		FileUseCase: fileStoreUseCaseI,
+	})
+
 	// Auth APIs
 	apiV1.POST("/auth/register", authController.Register)
 	apiV1.POST("/auth/login", authController.Login)
@@ -153,9 +168,24 @@ func New(option *Router) *gin.Engine {
 	apiV1.PATCH("/post", postController.UpdateColumns)
 	apiV1.DELETE("/post/:id", postController.Delete)
 
-	// File APIs
-	apiV1.POST("/files/upload", fileController.UploadFile)
-	apiV1.GET("/files/download", fileController.GetFile)
+	// Upload and Download API
+	apiV1.POST("/upload", fileController.UploadFile)
+	apiV1.GET("/download", fileController.GetFile)
+
+	// File Store APIs
+	apiV1.GET("/folder/list", filesStoreController.ListFolder)
+	apiV1.GET("/folder/:id", filesStoreController.GetFolder)
+	apiV1.POST("/folder", filesStoreController.CreateFolder)
+	apiV1.PUT("/folder", filesStoreController.UpdateFolder)
+	apiV1.PATCH("/folder", filesStoreController.UpdateFolderColumns)
+	apiV1.DELETE("/folder", filesStoreController.DeleteFolder)
+
+	apiV1.GET("/file/list", filesStoreController.ListFile)
+	apiV1.GET("/file/:id", filesStoreController.GetFile)
+	apiV1.POST("/file", filesStoreController.CreateFile)
+	apiV1.PUT("/file", filesStoreController.UpdateFile)
+	apiV1.PATCH("/file", filesStoreController.UpdateFileColumns)
+	apiV1.DELETE("/file", filesStoreController.DeleteFile)
 
 	url := ginSwagger.URL("swagger/doc.json")
 	apiV1.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler, url))

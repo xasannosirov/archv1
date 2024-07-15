@@ -55,7 +55,7 @@ func NewFileController(controller *FileController) *FileController {
 // @Failure 		401 {object} errors.Error
 // @Failure 		403 {object} errors.Error
 // @Failure     	500 {object} errors.Error
-// @Router 			/v1/files/upload [POST]
+// @Router 			/v1/upload [POST]
 func (f *FileController) UploadFile(c *gin.Context) {
 	file, err := c.FormFile("file")
 	if err != nil {
@@ -146,7 +146,7 @@ func (f *FileController) UploadFile(c *gin.Context) {
 // @Failure 		403 {object} errors.Error
 // @Failure 		404 {object} errors.Error
 // @Failure 		500 {object} errors.Error
-// @Router 			/v1/files/download [GET]
+// @Router 			/v1/download [GET]
 func (f *FileController) GetFile(c *gin.Context) {
 	baseURL := "./internal/files/"
 

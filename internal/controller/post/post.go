@@ -181,7 +181,7 @@ func (p *ControllerPost) Update(c *gin.Context) {
 
 	postResponse, err := p.PostUseCase.Update(context.Background(), request)
 	if err != nil {
-		errors.ErrorResponse(c, http.StatusInternalServerError, err.Error())
+		errors.ErrorResponse(c, http.StatusNotFound, err.Error())
 
 		return
 	}

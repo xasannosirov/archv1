@@ -53,6 +53,7 @@ func (r *Repo) List(ctx context.Context, filter entity.Filter, lang string) (ent
 			title        string
 			content      string
 			shortContent string
+			files        pq.StringArray
 			post         entity.GetPostResponse
 		)
 		err = rows.Scan(
@@ -63,7 +64,7 @@ func (r *Repo) List(ctx context.Context, filter entity.Filter, lang string) (ent
 			&post.Slug,
 			&post.Status,
 			&post.UserID,
-			&post.Files,
+			&files,
 		)
 		if err != nil {
 			return entity.ListPostResponse{}, err
@@ -72,6 +73,8 @@ func (r *Repo) List(ctx context.Context, filter entity.Filter, lang string) (ent
 		post.Title = map[string]string{lang: title}
 		post.Content = map[string]string{lang: content}
 		post.ShortContent = map[string]string{lang: shortContent}
+
+		post.Files = files
 
 		response.Posts = append(response.Posts, &post)
 	}
@@ -92,6 +95,7 @@ func (r *Repo) GetByID(ctx context.Context, postID int, lang string) (entity.Get
 		title        string
 		content      string
 		shortContent string
+		files        pq.StringArray
 		response     entity.GetPostResponse
 	)
 
@@ -111,7 +115,6 @@ func (r *Repo) GetByID(ctx context.Context, postID int, lang string) (entity.Get
 
 	whereQuery := ` WHERE deleted_at IS NULL AND status = TRUE AND id = ?`
 
-	var files pq.StringArray
 	err := r.DB.QueryRowContext(ctx, selectQuery+whereQuery, postID).Scan(
 		&response.ID,
 		&title,
@@ -166,7 +169,7 @@ func (r *Repo) Create(ctx context.Context, post entity.CreatePostRequest) (entit
 			UserID:       post.UserID,
 			CreatedBy:    &post.CreatedBy,
 		}).
-		Returning("id, title, content, short_content, slug, user_id, files").
+		Returning("id, title, content, short_content, slug, status, user_id").
 		Scan(ctx,
 			&response.ID,
 			&title,
@@ -175,7 +178,6 @@ func (r *Repo) Create(ctx context.Context, post entity.CreatePostRequest) (entit
 			&response.Slug,
 			&response.Status,
 			&response.UserID,
-			&response.Files,
 		)
 
 	if err != nil {
@@ -200,36 +202,22 @@ func (r *Repo) Update(ctx context.Context, post entity.UpdatePostRequest) (entit
 		title        []byte
 		content      []byte
 		shortContent []byte
+		files        pq.StringArray
 		response     entity.UpdatePostResponse
 	)
 
-	titleBytes, err := json.Marshal(&post.Title)
-	if err != nil {
-		return entity.UpdatePostResponse{}, err
-	}
-	contentBytes, err := json.Marshal(&post.Content)
-	if err != nil {
-		return entity.UpdatePostResponse{}, err
-	}
-	shortContentBytes, err := json.Marshal(&post.ShortContent)
-	if err != nil {
-		return entity.UpdatePostResponse{}, err
-	}
-
-	err = r.DB.NewUpdate().
-		Model(&entity.Posts{
-			ID:           post.ID,
-			Title:        string(titleBytes),
-			Content:      string(contentBytes),
-			ShortContent: string(shortContentBytes),
-			Slug:         post.Slug,
-			Status:       post.Status,
-			UserID:       post.UserID,
-			Files:        post.Files,
-			UpdatedBy:    &post.UpdatedBy,
-		}).
+	err := r.DB.NewUpdate().
+		Table("posts").
+		Set("title = ?", post.Title).
+		Set("content = ?", post.Content).
+		Set("short_content = ?", post.ShortContent).
+		Set("slug = ?", post.Slug).
+		Set("status = ?", post.Status).
+		Set("user_id = ?", post.UserID).
+		Set("updated_by = ?", post.UpdatedBy).
+		Set("updated_at = NOW()").
 		Where("deleted_at IS NULL AND status = TRUE AND id = ?", post.ID).
-		Returning("id, title, content, short_content, slug, user_id, files").
+		Returning("id, title, content, short_content, slug, status, user_id, files").
 		Scan(ctx,
 			&response.ID,
 			&title,
@@ -238,7 +226,7 @@ func (r *Repo) Update(ctx context.Context, post entity.UpdatePostRequest) (entit
 			&response.Slug,
 			&response.Status,
 			&response.UserID,
-			&response.Files,
+			&files,
 		)
 
 	if err != nil {
@@ -255,6 +243,8 @@ func (r *Repo) Update(ctx context.Context, post entity.UpdatePostRequest) (entit
 		return entity.UpdatePostResponse{}, err
 	}
 
+	response.Files = files
+
 	return response, nil
 }
 
@@ -263,33 +253,19 @@ func (r *Repo) UpdateColumns(ctx context.Context, fields entity.UpdatePostColumn
 		title        string
 		content      string
 		shortContent string
+		files        pq.StringArray
 		response     entity.UpdatePostResponse
 	)
 
-	updater := r.DB.NewUpdate().Table("menus")
+	updater := r.DB.NewUpdate().Table("posts")
 
 	for key, value := range fields.Fields {
 		if key == "title" {
-			titleBytes, err := json.Marshal(value)
-			if err != nil {
-				return entity.UpdatePostResponse{}, err
-			}
-
-			updater.Set(key+" = ?", string(titleBytes))
+			updater.Set(key+" = ?", value)
 		} else if key == "content" {
-			contentBytes, err := json.Marshal(value)
-			if err != nil {
-				return entity.UpdatePostResponse{}, err
-			}
-
-			updater.Set(key+" = ?", string(contentBytes))
+			updater.Set(key+" = ?", value)
 		} else if key == "short_content" {
-			shorContentBytes, err := json.Marshal(value)
-			if err != nil {
-				return entity.UpdatePostResponse{}, err
-			}
-
-			updater.Set(key+" = ?", string(shorContentBytes))
+			updater.Set(key+" = ?", value)
 		} else if key == "slug" {
 			updater.Set(key+" = ?", value)
 		} else if key == "status" {
@@ -298,11 +274,15 @@ func (r *Repo) UpdateColumns(ctx context.Context, fields entity.UpdatePostColumn
 			updater.Set(key+" = ?", value)
 		} else if key == "files" {
 			updater.Set(key+" = ?", value)
+		} else if key == "updated_by" {
+			updater.Set(key+" = ?", value)
 		}
 	}
 
+	updater.Set("updated_at = NOW()")
+
 	err := updater.Where("deleted_at IS NULL AND status = TRUE AND id = ?", fields.ID).
-		Returning("id, title, content, short_content, slug, user_id, files").
+		Returning("id, title, content, short_content, slug, status, user_id, files").
 		Scan(ctx,
 			&response.ID,
 			&title,
@@ -311,7 +291,7 @@ func (r *Repo) UpdateColumns(ctx context.Context, fields entity.UpdatePostColumn
 			&response.Slug,
 			&response.Status,
 			&response.UserID,
-			&response.Files,
+			&files,
 		)
 
 	if err != nil {
@@ -327,6 +307,8 @@ func (r *Repo) UpdateColumns(ctx context.Context, fields entity.UpdatePostColumn
 	if err := json.Unmarshal([]byte(shortContent), &response.ShortContent); err != nil {
 		return entity.UpdatePostResponse{}, err
 	}
+
+	response.Files = files
 
 	return response, nil
 }
@@ -349,7 +331,7 @@ func (r *Repo) Delete(ctx context.Context, postID, deletedBy int) (entity.Delete
 	}
 
 	if rowEffects == 0 {
-		return entity.DeletePostResponse{}, errors.New("menu not found")
+		return entity.DeletePostResponse{}, errors.New("post not found")
 	}
 
 	return entity.DeletePostResponse{

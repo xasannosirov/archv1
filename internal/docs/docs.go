@@ -1247,14 +1247,8 @@ const docTemplate = `{
                             "$ref": "#/definitions/errors.Error"
                         }
                     },
-                    "401": {
-                        "description": "Unauthorized",
-                        "schema": {
-                            "$ref": "#/definitions/errors.Error"
-                        }
-                    },
-                    "403": {
-                        "description": "Forbidden",
+                    "404": {
+                        "description": "Not Found",
                         "schema": {
                             "$ref": "#/definitions/errors.Error"
                         }
@@ -1303,14 +1297,8 @@ const docTemplate = `{
                             "$ref": "#/definitions/errors.Error"
                         }
                     },
-                    "401": {
-                        "description": "Unauthorized",
-                        "schema": {
-                            "$ref": "#/definitions/errors.Error"
-                        }
-                    },
-                    "403": {
-                        "description": "Forbidden",
+                    "404": {
+                        "description": "Not Found",
                         "schema": {
                             "$ref": "#/definitions/errors.Error"
                         }
@@ -1370,6 +1358,12 @@ const docTemplate = `{
                     },
                     "403": {
                         "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/errors.Error"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
                         "schema": {
                             "$ref": "#/definitions/errors.Error"
                         }
@@ -1696,9 +1690,6 @@ const docTemplate = `{
             "properties": {
                 "id": {
                     "type": "integer"
-                },
-                "password": {
-                    "type": "string"
                 },
                 "refresh": {
                     "type": "string"

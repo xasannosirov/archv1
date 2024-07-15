@@ -27,7 +27,6 @@ func (r *Repo) List(ctx context.Context, filter entity.Filter) (entity.ListUserR
 	SELECT
 		id,
 		username,
-		password,
 		role,
 		status,
 		refresh
@@ -49,7 +48,6 @@ func (r *Repo) List(ctx context.Context, filter entity.Filter) (entity.ListUserR
 		err := rows.Scan(
 			&user.Id,
 			&user.Username,
-			&user.Password,
 			&user.Role,
 			&user.Status,
 			&user.Refresh,
@@ -80,7 +78,6 @@ func (r *Repo) GetByID(ctx context.Context, userID int) (entity.GetUserResponse,
 	SELECT 
 		id, 
 		username, 
-		password, 
 		role,
 		status,
 		refresh
@@ -91,7 +88,6 @@ func (r *Repo) GetByID(ctx context.Context, userID int) (entity.GetUserResponse,
 	err := r.DB.QueryRowContext(ctx, selectQuery+whereQuery, userID).Scan(
 		&response.Id,
 		&response.Username,
-		&response.Password,
 		&response.Role,
 		&response.Status,
 		&response.Refresh,

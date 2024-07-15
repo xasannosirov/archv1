@@ -1,16 +1,18 @@
 package entity
 
+import "github.com/lib/pq"
+
 type Posts struct {
-	ID           int      `json:"id" bun:"id"`
-	Title        string   `json:"title" bun:"title"`
-	Content      string   `json:"content" bun:"content"`
-	ShortContent string   `json:"short_content" bun:"short_content"`
-	Slug         string   `json:"slug" bun:"slug"`
-	Status       bool     `json:"status" bun:"status"`
-	UserID       int      `json:"user_id" bun:"user_id"`
-	Files        []string `json:"files" bun:"files"`
-	CreatedBy    *int     `json:"created_by" bun:"created_by"`
-	UpdatedBy    *int     `json:"updated_by" bun:"updated_by"`
+	ID           *int           `json:"id" bun:"id"`
+	Title        string         `json:"title" bun:"title"`
+	Content      string         `json:"content" bun:"content"`
+	ShortContent string         `json:"short_content" bun:"short_content"`
+	Slug         string         `json:"slug" bun:"slug"`
+	Status       bool           `json:"status" bun:"status"`
+	UserID       int            `json:"user_id" bun:"user_id"`
+	Files        pq.StringArray `json:"files" bun:"files"`
+	CreatedBy    *int           `json:"created_by" bun:"created_by"`
+	UpdatedBy    *int           `json:"updated_by" bun:"updated_by"`
 }
 
 type CreatePostRequest struct {

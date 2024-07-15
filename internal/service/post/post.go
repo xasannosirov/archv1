@@ -17,27 +17,27 @@ func NewPostService(menuRepo post.PostRepository) PostServiceI {
 }
 
 func (r *PostService) List(ctx context.Context, filter entity.Filter, lang string) (entity.ListPostResponse, error) {
-	return entity.ListPostResponse{}, nil
+	return r.postRepo.List(ctx, filter, lang)
 }
 
 func (r *PostService) GetByID(ctx context.Context, postID int, lang string) (entity.GetPostResponse, error) {
-	return entity.GetPostResponse{}, nil
+	return r.postRepo.GetByID(ctx, postID, lang)
 }
 
 func (r *PostService) Create(ctx context.Context, post entity.CreatePostRequest) (entity.CreatePostResponse, error) {
-	return entity.CreatePostResponse{}, nil
+	return r.postRepo.Create(ctx, post)
 }
 
 func (r *PostService) Update(ctx context.Context, post entity.UpdatePostRequest) (entity.UpdatePostResponse, error) {
-	return entity.UpdatePostResponse{}, nil
+	return r.postRepo.Update(ctx, post)
 }
 
 func (r *PostService) UpdateColumns(ctx context.Context, post entity.UpdatePostColumnsRequest) (entity.UpdatePostResponse, error) {
-	return entity.UpdatePostResponse{}, nil
+	return r.postRepo.UpdateColumns(ctx, post)
 }
 
 func (r *PostService) Delete(ctx context.Context, postID, deletedBy int) (entity.DeletePostResponse, error) {
-	return entity.DeletePostResponse{}, nil
+	return r.postRepo.Delete(ctx, postID, deletedBy)
 }
 
 func (r *PostService) AddFile(ctx context.Context, fileURL string, postID int) error {

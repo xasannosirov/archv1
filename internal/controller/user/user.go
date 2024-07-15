@@ -50,8 +50,7 @@ func NewUserController(option *ControllerUser) ControllerUser {
 // @Param 			limit query int false "Limit"
 // @Success 		200 {object} entity.ListUserResponse
 // @Failure 		400 {object} errors.Error
-// @Failure 		401 {object} errors.Error
-// @Failure 		403 {object} errors.Error
+// @Failure 		404 {object} errors.Error
 // @Failure 		500 {object} errors.Error
 // @Router 			/v1/user/list [GET]
 func (u *ControllerUser) List(c *gin.Context) {
@@ -67,7 +66,7 @@ func (u *ControllerUser) List(c *gin.Context) {
 		Limit: params.Limit,
 	})
 	if err != nil {
-		errors.ErrorResponse(c, http.StatusInternalServerError, err.Error())
+		errors.ErrorResponse(c, http.StatusNotFound, err.Error())
 
 		return
 	}
@@ -84,8 +83,7 @@ func (u *ControllerUser) List(c *gin.Context) {
 // @Param 			id path int true "User ID"
 // @Success 		200 {object} entity.GetUserResponse
 // @Failure 		400 {object} errors.Error
-// @Failure 		401 {object} errors.Error
-// @Failure 		403 {object} errors.Error
+// @Failure 		404 {object} errors.Error
 // @Failure 		500 {object} errors.Error
 // @Router 			/v1/user/{id} [GET]
 func (u *ControllerUser) GetByID(c *gin.Context) {
@@ -100,7 +98,7 @@ func (u *ControllerUser) GetByID(c *gin.Context) {
 
 	userResponse, err := u.UserUseCase.GetByID(context.Background(), userIntID)
 	if err != nil {
-		errors.ErrorResponse(c, http.StatusBadRequest, err.Error())
+		errors.ErrorResponse(c, http.StatusNotFound, err.Error())
 
 		return
 	}
@@ -208,6 +206,18 @@ func (u *ControllerUser) Update(c *gin.Context) {
 		return
 	}
 
+	status, err := u.AuthUseCase.UniqueUsername(context.Background(), request.Username)
+	if err != nil {
+		errors.ErrorResponse(c, http.StatusBadRequest, err.Error())
+
+		return
+	}
+	if status {
+		errors.ErrorResponse(c, http.StatusBadRequest, "Username is already taken")
+
+		return
+	}
+
 	claims, err := utils.GetTokenClaimsFromHeader(c.Request, u.Conf)
 	if err != nil {
 		errors.ErrorResponse(c, http.StatusUnauthorized, err.Error())
@@ -227,7 +237,7 @@ func (u *ControllerUser) Update(c *gin.Context) {
 
 	userResponse, err := u.UserUseCase.Update(context.Background(), request)
 	if err != nil {
-		errors.ErrorResponse(c, http.StatusInternalServerError, err.Error())
+		errors.ErrorResponse(c, http.StatusNotFound, err.Error())
 		return
 	}
 
@@ -278,7 +288,7 @@ func (u *ControllerUser) UpdateColumns(c *gin.Context) {
 
 	userResponse, err := u.UserUseCase.UpdateColumns(context.Background(), request)
 	if err != nil {
-		errors.ErrorResponse(c, http.StatusInternalServerError, err.Error())
+		errors.ErrorResponse(c, http.StatusNotFound, err.Error())
 
 		return
 	}
@@ -298,6 +308,7 @@ func (u *ControllerUser) UpdateColumns(c *gin.Context) {
 // @Failure 		400 {object} errors.Error
 // @Failure 		401 {object} errors.Error
 // @Failure 		403 {object} errors.Error
+// @Failure 		404 {object} errors.Error
 // @Failure 		500 {object} errors.Error
 // @Router 			/v1/user/{id} [DELETE]
 func (u *ControllerUser) Delete(c *gin.Context) {
@@ -321,7 +332,7 @@ func (u *ControllerUser) Delete(c *gin.Context) {
 
 	response, err := u.UserUseCase.Delete(context.Background(), userIntID, deletedBy)
 	if err != nil {
-		errors.ErrorResponse(c, http.StatusInternalServerError, err.Error())
+		errors.ErrorResponse(c, http.StatusNotFound, err.Error())
 
 		return
 	}

@@ -97,12 +97,10 @@ func (r *Repo) GetSiteMenus(ctx context.Context, filter entity.Filter, lang stri
     	path 
 	FROM menus`, lang, lang)
 
-	filterQuery := fmt.Sprintf(
-		" WHERE deleted_at IS NULL AND parent_id IS NULL ORDER BY sort LIMIT %d OFFSET %d",
-		filter.Limit, offset,
-	)
+	whereQuery := ` WHERE deleted_at IS NULL AND parent_id IS NULL AND status = TRUE`
+	filterQuery := fmt.Sprintf(" ORDER BY sort LIMIT %d OFFSET %d", filter.Limit, offset)
 
-	rows, err := r.DB.QueryContext(ctx, selectQuery+filterQuery)
+	rows, err := r.DB.QueryContext(ctx, selectQuery+whereQuery+filterQuery)
 	if err != nil {
 		return entity.SiteMenuListResponse{}, err
 	}
@@ -144,7 +142,7 @@ func (r *Repo) GetSiteMenus(ctx context.Context, filter entity.Filter, lang stri
 		return entity.SiteMenuListResponse{}, err
 	}
 
-	countQuery := fmt.Sprintf("SELECT COUNT(*) FROM menus WHERE deleted_at IS NULL AND parent_id IS NULL")
+	countQuery := fmt.Sprintf("SELECT COUNT(*) FROM menus WHERE deleted_at IS NULL AND parent_id IS NULL AND status = TRUE")
 
 	if err := r.DB.QueryRowContext(ctx, countQuery).Scan(&response.Total); err != nil {
 		return entity.SiteMenuListResponse{}, err
@@ -185,6 +183,7 @@ func (r *Repo) List(ctx context.Context, filter entity.Filter, lang string) (ent
 		var (
 			title   string
 			content string
+			files   pq.StringArray
 			menu    entity.GetMenuResponse
 		)
 		err := rows.Scan(
@@ -197,7 +196,7 @@ func (r *Repo) List(ctx context.Context, filter entity.Filter, lang string) (ent
 			&menu.Slug,
 			&menu.Path,
 			&menu.Status,
-			&menu.Files,
+			&files,
 		)
 		if err != nil {
 			return entity.ListMenuResponse{}, err
@@ -205,6 +204,8 @@ func (r *Repo) List(ctx context.Context, filter entity.Filter, lang string) (ent
 
 		menu.Title = map[string]string{lang: title}
 		menu.Content = map[string]string{lang: content}
+
+		menu.Files = files
 
 		response.Menus = append(response.Menus, &menu)
 	}
@@ -334,27 +335,18 @@ func (r *Repo) Update(ctx context.Context, menu entity.UpdateMenuRequest) (entit
 		response entity.UpdateMenuResponse
 	)
 
-	titleBytes, err := json.Marshal(menu.Title)
-	if err != nil {
-		return entity.UpdateMenuResponse{}, err
-	}
-	contentBytes, err := json.Marshal(menu.Content)
-	if err != nil {
-		return entity.UpdateMenuResponse{}, err
-	}
-
-	err = r.DB.NewUpdate().Model(&entity.Menus{
-		ID:        &menu.ID,
-		Title:     string(titleBytes),
-		Content:   string(contentBytes),
-		IsStatic:  menu.IsStatic,
-		Sort:      menu.Sort,
-		ParentID:  menu.ParentID,
-		Status:    menu.Status,
-		Slug:      menu.Slug,
-		Path:      menu.Path,
-		UpdatedBy: &menu.UpdatedBy,
-	}).
+	err := r.DB.NewUpdate().
+		Table("menus").
+		Set("title = ?", menu.Title).
+		Set("content = ?", menu.Content).
+		Set("is_static = ?", menu.IsStatic).
+		Set("sort = ?", menu.Sort).
+		Set("parent_id = ?", menu.ParentID).
+		Set("status = ?", menu.Status).
+		Set("slug = ?", menu.Slug).
+		Set("path = ?", menu.Path).
+		Set("updated_by = ?", menu.UpdatedBy).
+		Set("updated_at = NOW()").
 		Where("deleted_at IS NULL AND status = TRUE AND id = ?", menu.ID).
 		Returning("id, content, title, is_static, sort, parent_id, slug, path").
 		Scan(ctx,
@@ -416,7 +408,7 @@ func (r *Repo) UpdateColumns(ctx context.Context, fields entity.UpdateMenuColumn
 		}
 	}
 	updater.Set("updated_by = ?", fields.Fields["updated_by"])
-	updater.Set("updated_at = ?", fields.Fields["updated_at"])
+	updater.Set("updated_at = NOW()")
 
 	err := updater.Where("deleted_at IS NULL AND status = TRUE AND id = ?", fields.ID).
 		Returning("id, title, content, is_static, sort, parent_id, slug, path").

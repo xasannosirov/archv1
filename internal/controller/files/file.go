@@ -9,7 +9,6 @@ import (
 	"archv1/internal/usecase/menu"
 	"archv1/internal/usecase/post"
 	"context"
-	"fmt"
 	"github.com/casbin/casbin/v2"
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
@@ -63,7 +62,6 @@ func (f *FileController) UploadFile(c *gin.Context) {
 	}
 
 	category := c.Query("category")
-	fmt.Println(category)
 	id := c.Query("id")
 
 	intId, err := strconv.Atoi(id)

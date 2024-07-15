@@ -465,24 +465,13 @@ func (r *Repo) Delete(ctx context.Context, menuID, deletedBy int) (entity.Delete
 }
 
 func (r *Repo) AddFile(ctx context.Context, fileURL string, menuID int) error {
-	selectQuery := fmt.Sprintf(
-		`SELECT files FROM menus WHERE deleted_at IS NULL AND status = TRUE AND id = '%d'`, menuID,
-	)
+	updateQuery := fmt.Sprintf(`
+	UPDATE menus 
+	SET files = array_append(files, '%v')
+	WHERE deleted_at IS NULL AND status = TRUE AND id = '%d'
+	`, fileURL, menuID)
 
-	var files pq.StringArray
-
-	if err := r.DB.QueryRowContext(ctx, selectQuery).Scan(&files); err != nil {
-		if !errors.Is(err, sql.ErrNoRows) {
-			return err
-		}
-	}
-
-	filesSlice := []string(files)
-	filesSlice = append(filesSlice, fileURL)
-
-	insertQuery := fmt.Sprintf(`UPDATE menus SET files = '%v' WHERE id = '%d'`, pq.Array(filesSlice), menuID)
-
-	result, err := r.DB.ExecContext(ctx, insertQuery)
+	result, err := r.DB.ExecContext(ctx, updateQuery)
 	if err != nil {
 		return err
 	}
@@ -493,7 +482,7 @@ func (r *Repo) AddFile(ctx context.Context, fileURL string, menuID int) error {
 	}
 
 	if rowEffects == 0 {
-		return errors.New("file not found")
+		return errors.New("menu not found for append file")
 	}
 
 	return nil

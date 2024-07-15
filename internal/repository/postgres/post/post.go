@@ -340,21 +340,13 @@ func (r *Repo) Delete(ctx context.Context, postID, deletedBy int) (entity.Delete
 }
 
 func (r *Repo) AddFile(ctx context.Context, fileURL string, postID int) error {
-	selectQuery := fmt.Sprintf(
-		`SELECT files FROM posts WHERE deleted_at IS NULL AND status = TRUE AND id = '%d'`, postID,
-	)
+	updateQuery := fmt.Sprintf(`
+	UPDATE posts 
+	SET files = array_append(files, '%v')
+	WHERE deleted_at IS NULL AND status = TRUE AND id = '%d'
+	`, fileURL, postID)
 
-	var files pq.StringArray
-
-	if err := r.DB.QueryRowContext(ctx, selectQuery).Scan(&files); err != nil {
-		return err
-	}
-
-	files = append(files, fileURL)
-
-	insertQuery := fmt.Sprintf(`INSERT INTO posts (files) VALUES ('%v')`, files)
-
-	result, err := r.DB.ExecContext(ctx, insertQuery)
+	result, err := r.DB.ExecContext(ctx, updateQuery)
 	if err != nil {
 		return err
 	}
@@ -365,7 +357,7 @@ func (r *Repo) AddFile(ctx context.Context, fileURL string, postID int) error {
 	}
 
 	if rowEffects == 0 {
-		return errors.New("file not found")
+		return errors.New("post not found for append file")
 	}
 
 	return nil

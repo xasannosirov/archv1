@@ -57,6 +57,17 @@ func (a *ControllerAuth) Register(c *gin.Context) {
 		return
 	}
 
+	if request.Username == "" {
+		errors.ErrorResponse(c, http.StatusBadRequest, "username is required")
+		return
+	} else if request.Password == "" {
+		errors.ErrorResponse(c, http.StatusBadRequest, "password is required")
+		return
+	} else if request.Username == "" && request.Password == "" {
+		errors.ErrorResponse(c, http.StatusBadRequest, "username and password is required")
+		return
+	}
+
 	status, err := a.AuthUseCase.UniqueUsername(context.Background(), request.Username)
 	if err != nil {
 		errors.ErrorResponse(c, http.StatusInternalServerError, err.Error())
@@ -116,7 +127,6 @@ func (a *ControllerAuth) Register(c *gin.Context) {
 		AccessToken:  access,
 		RefreshToken: refresh,
 	})
-
 }
 
 // Login
@@ -137,6 +147,17 @@ func (a *ControllerAuth) Login(c *gin.Context) {
 	if err := c.ShouldBindJSON(&request); err != nil {
 		errors.ErrorResponse(c, http.StatusBadRequest, err.Error())
 
+		return
+	}
+
+	if request.Username == "" {
+		errors.ErrorResponse(c, http.StatusBadRequest, "Username is required")
+		return
+	} else if request.Password == "" {
+		errors.ErrorResponse(c, http.StatusBadRequest, "Password is required")
+		return
+	} else if request.Username == "" && request.Password == "" {
+		errors.ErrorResponse(c, http.StatusBadRequest, "Username and password is required")
 		return
 	}
 

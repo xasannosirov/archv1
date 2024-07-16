@@ -152,6 +152,11 @@ func (f *FileController) GetFile(c *gin.Context) {
 
 	fileURL := c.Query("url")
 
+	if fileURL == "" {
+		errors.ErrorResponse(c, http.StatusBadRequest, "url is required")
+		return
+	}
+
 	file, err := os.Open(baseURL + fileURL)
 	if err != nil {
 		errors.ErrorResponse(c, http.StatusInternalServerError, err.Error())

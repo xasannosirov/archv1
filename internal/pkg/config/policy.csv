@@ -5,6 +5,8 @@ p, unauthorized, /v1/auth/register, POST
 p, unauthorized, /v1/auth/login, POST
 p, unauthorized, /v1/auth/new-access/{refresh}, GET
 
+g, admin, unauthorized, (POST)|(GET)
+
 p, admin, /v1/user/list, GET
 p, admin, /v1/user/{id}, GET
 p, admin, /v1/user, POST

@@ -9,8 +9,10 @@ import (
 	userCont "archv1/internal/controller/user"
 	_ "archv1/internal/docs"
 	"archv1/internal/pkg/config"
+	"archv1/internal/pkg/middleware"
 	"archv1/internal/pkg/repo/postgres"
 	"archv1/internal/pkg/repo/redis"
+	"archv1/internal/pkg/tokens"
 	authRepo "archv1/internal/repository/postgres/auth"
 	fileStoreRepo "archv1/internal/repository/postgres/fileStore"
 	menuRepo "archv1/internal/repository/postgres/menu"
@@ -61,11 +63,11 @@ func New(option *Router) *gin.Engine {
 	router.Use(gin.Logger())
 	router.Use(gin.Recovery())
 
-	//jwtHandler := tokens.JWTHandler{
-	//	SigningKey: option.Conf.JWTSecret,
-	//}
-	//
-	//middleware.NewAuthorizer(option.Enforcer, jwtHandler, *option.Conf)
+	jwtHandler := tokens.JWTHandler{
+		SigningKey: option.Conf.JWTSecret,
+	}
+
+	router.Use(middleware.NewAuthorizer(option.Enforcer, jwtHandler, *option.Conf))
 
 	apiV1 := router.Group("/v1")
 

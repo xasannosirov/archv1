@@ -585,7 +585,7 @@ paths:
       summary: Register
       tags:
       - auth
-  /v1/files/download:
+  /v1/download:
     get:
       consumes:
       - application/json
@@ -626,55 +626,6 @@ paths:
       security:
       - BearerAuth: []
       summary: Get File
-      tags:
-      - file
-  /v1/files/upload:
-    post:
-      consumes:
-      - multipart/form-data
-      description: This API for upload a file
-      parameters:
-      - description: Upload file
-        in: formData
-        name: file
-        required: true
-        type: file
-      - description: Category
-        in: query
-        name: category
-        required: true
-        type: string
-      - description: Object ID
-        in: query
-        name: id
-        required: true
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/entity.FileUploadResponse'
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/errors.Error'
-        "401":
-          description: Unauthorized
-          schema:
-            $ref: '#/definitions/errors.Error'
-        "403":
-          description: Forbidden
-          schema:
-            $ref: '#/definitions/errors.Error'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/errors.Error'
-      security:
-      - BearerAuth: []
-      summary: Upload File
       tags:
       - file
   /v1/menu:
@@ -1175,6 +1126,55 @@ paths:
       summary: Get Site Menu
       tags:
       - menu
+  /v1/upload:
+    post:
+      consumes:
+      - multipart/form-data
+      description: This API for upload a file
+      parameters:
+      - description: Upload file
+        in: formData
+        name: file
+        required: true
+        type: file
+      - description: Category
+        in: query
+        name: category
+        required: true
+        type: string
+      - description: Object ID
+        in: query
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/entity.FileUploadResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/errors.Error'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/errors.Error'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/errors.Error'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/errors.Error'
+      security:
+      - BearerAuth: []
+      summary: Upload File
+      tags:
+      - file
   /v1/user:
     patch:
       consumes:

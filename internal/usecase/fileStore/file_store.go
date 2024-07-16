@@ -16,12 +16,12 @@ func NewFilesStoreUseCase(service fileStore.FilesStoreServiceI) FilesStoreUseCas
 	}
 }
 
-func (f *FilesStoreUseCase) ListFolder(ctx context.Context, filter entity.Filter, lang string) (entity.ListFolderResponse, error) {
-	return f.fileStoreService.ListFolder(ctx, filter, lang)
+func (f *FilesStoreUseCase) ListFolder(ctx context.Context, filter entity.Filter) (entity.ListFolderResponse, error) {
+	return f.fileStoreService.ListFolder(ctx, filter)
 }
 
-func (f *FilesStoreUseCase) GetFolder(ctx context.Context, folderID int, lang string) (entity.GetFolderResponse, error) {
-	return f.fileStoreService.GetFolder(ctx, folderID, lang)
+func (f *FilesStoreUseCase) GetFolder(ctx context.Context, folderID int) (entity.GetFolderResponse, error) {
+	return f.fileStoreService.GetFolder(ctx, folderID)
 }
 
 func (f *FilesStoreUseCase) CreateFolder(ctx context.Context, folder entity.CreateFolderRequest) (entity.CreateFolderResponse, error) {
@@ -40,12 +40,12 @@ func (f *FilesStoreUseCase) DeleteFolder(ctx context.Context, folderID, deletedB
 	return f.fileStoreService.DeleteFolder(ctx, folderID, deletedBy)
 }
 
-func (f *FilesStoreUseCase) ListFile(ctx context.Context, filter entity.Filter, lang string) (entity.ListFileResponse, error) {
-	return f.fileStoreService.ListFile(ctx, filter, lang)
+func (f *FilesStoreUseCase) ListFile(ctx context.Context, filter entity.Filter) (entity.ListFileResponse, error) {
+	return f.fileStoreService.ListFile(ctx, filter)
 }
 
-func (f *FilesStoreUseCase) GetFile(ctx context.Context, fileID int, lang string) (entity.GetFileResponse, error) {
-	return f.fileStoreService.GetFile(ctx, fileID, lang)
+func (f *FilesStoreUseCase) GetFile(ctx context.Context, fileID int) (entity.GetFileResponse, error) {
+	return f.fileStoreService.GetFile(ctx, fileID)
 }
 
 func (f *FilesStoreUseCase) CreateFile(ctx context.Context, file entity.CreateFileRequest) (entity.CreateFileResponse, error) {

@@ -37,9 +37,8 @@ type UpdateFolderRequest struct {
 }
 
 type UpdateFolderColumnsRequest struct {
-	Fields    map[string]string `json:"fields"`
-	FolderID  int               `json:"folder_id"`
-	UpdatedBy int               `json:"-"`
+	Fields   map[string]string `json:"fields"`
+	FolderID int               `json:"folder_id"`
 }
 
 type UpdateFolderResponse struct {
@@ -64,9 +63,10 @@ type ListFolderResponse struct {
 }
 
 type CreateFileRequest struct {
-	Type     string `json:"type"`
-	Link     string `json:"link"`
-	FolderID *int   `json:"folder_id"`
+	Type      string `json:"type"`
+	Link      string `json:"link"`
+	FolderID  *int   `json:"folder_id"`
+	CreatedBy int    `json:"-"`
 }
 
 type CreateFileResponse struct {
@@ -77,16 +77,16 @@ type CreateFileResponse struct {
 }
 
 type UpdateFileRequest struct {
-	ID       int    `json:"id"`
-	Type     string `json:"type"`
-	Link     string `json:"link"`
-	FolderID *int   `json:"folder_id"`
+	ID        int    `json:"id"`
+	Type      string `json:"type"`
+	Link      string `json:"link"`
+	FolderID  *int   `json:"folder_id"`
+	UpdatedBy int    `json:"-"`
 }
 
 type UpdateFileColumnsRequest struct {
-	Fields    map[string]string `json:"fields"`
-	FileID    int               `json:"file_id"`
-	UpdatedBy int               `json:"-"`
+	Fields map[string]string `json:"fields"`
+	FileID int               `json:"file_id"`
 }
 
 type UpdateFileResponse struct {

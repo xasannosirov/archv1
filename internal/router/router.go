@@ -178,14 +178,14 @@ func New(option *Router) *gin.Engine {
 	apiV1.POST("/folder", filesStoreController.CreateFolder)
 	apiV1.PUT("/folder", filesStoreController.UpdateFolder)
 	apiV1.PATCH("/folder", filesStoreController.UpdateFolderColumns)
-	apiV1.DELETE("/folder", filesStoreController.DeleteFolder)
+	apiV1.DELETE("/folder/:id", filesStoreController.DeleteFolder)
 
 	apiV1.GET("/file/list", filesStoreController.ListFile)
 	apiV1.GET("/file/:id", filesStoreController.GetFile)
 	apiV1.POST("/file", filesStoreController.CreateFile)
 	apiV1.PUT("/file", filesStoreController.UpdateFile)
 	apiV1.PATCH("/file", filesStoreController.UpdateFileColumns)
-	apiV1.DELETE("/file", filesStoreController.DeleteFile)
+	apiV1.DELETE("/file/:id", filesStoreController.DeleteFile)
 
 	url := ginSwagger.URL("swagger/doc.json")
 	apiV1.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler, url))

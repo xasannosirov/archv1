@@ -78,7 +78,7 @@ func (r *Repo) GetFolder(ctx context.Context, folderID int) (entity.GetFolderRes
 	    folders
 	`
 
-	filterQuery := fmt.Sprintf(" WHERE id = %d AND deleted_at IS NULL", folderID)
+	filterQuery := fmt.Sprintf(" WHERE id = '%d' AND deleted_at IS NULL", folderID)
 
 	err := r.DB.QueryRowContext(ctx, selectQuery+filterQuery).Scan(
 		&response.ID,
@@ -99,7 +99,7 @@ func (r *Repo) CreateFolder(ctx context.Context, folder entity.CreateFolderReque
 		Model(&entity.Folders{
 			Name:      folder.Name,
 			ParentID:  folder.ParentID,
-			CreatedBy: folder.CreatedBy,
+			CreatedBy: &folder.CreatedBy,
 		}).
 		Returning("id, name, parent_id").
 		Scan(ctx, &response.ID, &response.Name, &response.ParentID)

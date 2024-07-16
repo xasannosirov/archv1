@@ -1,4 +1,29 @@
 definitions:
+  entity.CreateFileRequest:
+    properties:
+      folder_id:
+        type: integer
+      link:
+        type: string
+      type:
+        type: string
+    type: object
+  entity.CreateFolderRequest:
+    properties:
+      name:
+        type: string
+      parent_id:
+        type: integer
+    type: object
+  entity.CreateFolderResponse:
+    properties:
+      id:
+        type: integer
+      name:
+        type: string
+      parent_id:
+        type: integer
+    type: object
   entity.CreateMenuRequest:
     properties:
       content:
@@ -123,6 +148,16 @@ definitions:
       username:
         type: string
     type: object
+  entity.DeleteFileResponse:
+    properties:
+      message:
+        type: string
+    type: object
+  entity.DeleteFolderResponse:
+    properties:
+      message:
+        type: string
+    type: object
   entity.DeleteMenuResponse:
     properties:
       message:
@@ -142,6 +177,26 @@ definitions:
     properties:
       file_url:
         type: string
+    type: object
+  entity.GetFileResponse:
+    properties:
+      folder_id:
+        type: integer
+      id:
+        type: integer
+      link:
+        type: string
+      type:
+        type: string
+    type: object
+  entity.GetFolderResponse:
+    properties:
+      id:
+        type: integer
+      name:
+        type: string
+      parent_id:
+        type: integer
     type: object
   entity.GetMenuResponse:
     properties:
@@ -211,6 +266,24 @@ definitions:
         type: boolean
       username:
         type: string
+    type: object
+  entity.ListFileResponse:
+    properties:
+      files:
+        items:
+          $ref: '#/definitions/entity.GetFileResponse'
+        type: array
+      total:
+        type: integer
+    type: object
+  entity.ListFolderResponse:
+    properties:
+      folders:
+        items:
+          $ref: '#/definitions/entity.GetFolderResponse'
+        type: array
+      total:
+        type: integer
     type: object
   entity.ListMenuResponse:
     properties:
@@ -311,6 +384,64 @@ definitions:
           $ref: '#/definitions/entity.ParentMenuWithChildren'
         type: array
       total:
+        type: integer
+    type: object
+  entity.UpdateFileColumnsRequest:
+    properties:
+      fields:
+        additionalProperties:
+          type: string
+        type: object
+      file_id:
+        type: integer
+    type: object
+  entity.UpdateFileRequest:
+    properties:
+      folder_id:
+        type: integer
+      id:
+        type: integer
+      link:
+        type: string
+      type:
+        type: string
+    type: object
+  entity.UpdateFileResponse:
+    properties:
+      folder_id:
+        type: integer
+      id:
+        type: integer
+      link:
+        type: string
+      type:
+        type: string
+    type: object
+  entity.UpdateFolderColumnsRequest:
+    properties:
+      fields:
+        additionalProperties:
+          type: string
+        type: object
+      folder_id:
+        type: integer
+    type: object
+  entity.UpdateFolderRequest:
+    properties:
+      id:
+        type: integer
+      name:
+        type: string
+      parent_id:
+        type: integer
+    type: object
+  entity.UpdateFolderResponse:
+    properties:
+      id:
+        type: integer
+      name:
+        type: string
+      parent_id:
         type: integer
     type: object
   entity.UpdateMenuColumnsRequest:
@@ -628,6 +759,462 @@ paths:
       summary: Get File
       tags:
       - file
+  /v1/file:
+    patch:
+      consumes:
+      - application/json
+      parameters:
+      - description: Update File Columns Model
+        in: body
+        name: folder
+        required: true
+        schema:
+          $ref: '#/definitions/entity.UpdateFileColumnsRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/entity.UpdateFileResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/errors.Error'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/errors.Error'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/errors.Error'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/errors.Error'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/errors.Error'
+      security:
+      - BearerAuth: []
+      summary: Update File Columns
+      tags:
+      - file-storage
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: Create File Model
+        in: body
+        name: folder
+        required: true
+        schema:
+          $ref: '#/definitions/entity.CreateFileRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/entity.CreateFolderResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/errors.Error'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/errors.Error'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/errors.Error'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/errors.Error'
+      security:
+      - BearerAuth: []
+      summary: Create File
+      tags:
+      - file-storage
+    put:
+      consumes:
+      - application/json
+      parameters:
+      - description: Update File Model
+        in: body
+        name: folder
+        required: true
+        schema:
+          $ref: '#/definitions/entity.UpdateFileRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/entity.UpdateFileResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/errors.Error'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/errors.Error'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/errors.Error'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/errors.Error'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/errors.Error'
+      security:
+      - BearerAuth: []
+      summary: Update File
+      tags:
+      - file-storage
+  /v1/file/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: This API for deleting file with id
+      parameters:
+      - description: File ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/entity.DeleteFileResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/errors.Error'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/errors.Error'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/errors.Error'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/errors.Error'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/errors.Error'
+      security:
+      - BearerAuth: []
+      summary: Delete File
+      tags:
+      - file-storage
+    get:
+      consumes:
+      - application/json
+      parameters:
+      - description: File ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/entity.GetFileResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/errors.Error'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/errors.Error'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/errors.Error'
+      summary: Get File
+      tags:
+      - file-storage
+  /v1/file/list:
+    get:
+      consumes:
+      - application/json
+      parameters:
+      - description: Page
+        in: query
+        name: page
+        type: integer
+      - description: Limit
+        in: query
+        name: limit
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/entity.ListFileResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/errors.Error'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/errors.Error'
+      summary: List File
+      tags:
+      - file-storage
+  /v1/folder:
+    patch:
+      consumes:
+      - application/json
+      parameters:
+      - description: Update Folder Columns Model
+        in: body
+        name: folder
+        required: true
+        schema:
+          $ref: '#/definitions/entity.UpdateFolderColumnsRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/entity.UpdateFolderResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/errors.Error'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/errors.Error'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/errors.Error'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/errors.Error'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/errors.Error'
+      security:
+      - BearerAuth: []
+      summary: Update Folder Columns
+      tags:
+      - folder-storage
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: Create Folder Model
+        in: body
+        name: folder
+        required: true
+        schema:
+          $ref: '#/definitions/entity.CreateFolderRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/entity.CreateFolderResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/errors.Error'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/errors.Error'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/errors.Error'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/errors.Error'
+      security:
+      - BearerAuth: []
+      summary: Create Folder
+      tags:
+      - folder-storage
+    put:
+      consumes:
+      - application/json
+      parameters:
+      - description: Update Folder Model
+        in: body
+        name: folder
+        required: true
+        schema:
+          $ref: '#/definitions/entity.UpdateFolderRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/entity.UpdateFolderResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/errors.Error'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/errors.Error'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/errors.Error'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/errors.Error'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/errors.Error'
+      security:
+      - BearerAuth: []
+      summary: Update Folder
+      tags:
+      - folder-storage
+  /v1/folder/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: This API for deleting folder with id
+      parameters:
+      - description: Folder ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/entity.DeleteFolderResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/errors.Error'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/errors.Error'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/errors.Error'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/errors.Error'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/errors.Error'
+      security:
+      - BearerAuth: []
+      summary: Delete Folder
+      tags:
+      - folder-storage
+    get:
+      consumes:
+      - application/json
+      parameters:
+      - description: Folder ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/entity.GetFolderResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/errors.Error'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/errors.Error'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/errors.Error'
+      summary: Get Folder
+      tags:
+      - folder-storage
+  /v1/folder/list:
+    get:
+      consumes:
+      - application/json
+      parameters:
+      - description: Page
+        in: query
+        name: page
+        type: integer
+      - description: Limit
+        in: query
+        name: limit
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/entity.ListFolderResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/errors.Error'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/errors.Error'
+      summary: List Folder
+      tags:
+      - folder-storage
   /v1/menu:
     patch:
       consumes:

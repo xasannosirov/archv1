@@ -20,7 +20,7 @@ type Files struct {
 type CreateFolderRequest struct {
 	Name      string `json:"name"`
 	ParentID  *int   `json:"parent_id"`
-	CreatedBy *int   `json:"-"`
+	CreatedBy int    `json:"-"`
 }
 
 type CreateFolderResponse struct {
@@ -33,7 +33,7 @@ type UpdateFolderRequest struct {
 	ID        *int   `json:"id"`
 	Name      string `json:"name"`
 	ParentID  *int   `json:"parent_id"`
-	UpdatedBy *int   `json:"-"`
+	UpdatedBy int    `json:"-"`
 }
 
 type UpdateFolderColumnsRequest struct {

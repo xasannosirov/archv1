@@ -144,7 +144,7 @@ func New(option *Router) *gin.Engine {
 
 	// Auth APIs
 	apiV1.POST("/auth/register", authController.Register)
-	apiV1.POST("/auth/login", authController.Login)
+	//apiV1.POST("/auth/login", authController.Login)
 	apiV1.GET("/auth/new-access/:refresh", authController.NewAccessToken)
 
 	// User APIs

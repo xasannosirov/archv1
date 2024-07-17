@@ -151,7 +151,7 @@ func (m *ControllerMenu) GetByID(c *gin.Context) {
 // @Tags			menu
 // @Accept 			json
 // @Produce 		json
-// @Param 			request body entity.CreateMenuRequest true "Create User Model"
+// @Param 			request body entity.CreateMenuRequest true "Create Menu Model"
 // @Success 		201 {object} entity.CreateMenuResponse
 // @Failure 		400 {object} errors.Error
 // @Failure 		401 {object} errors.Error
@@ -193,7 +193,7 @@ func (m *ControllerMenu) Create(c *gin.Context) {
 // @Tags			menu
 // @Accept 			json
 // @Produce 		json
-// @Param 			request body entity.UpdateMenuRequest true "Update User Model"
+// @Param 			request body entity.UpdateMenuRequest true "Update Menu Model"
 // @Success 		200 {object} entity.UpdateMenuResponse
 // @Failure 		400 {object} errors.Error
 // @Failure 		401 {object} errors.Error
@@ -236,7 +236,7 @@ func (m *ControllerMenu) Update(c *gin.Context) {
 // @Tags			menu
 // @Accept 			json
 // @Produce 		json
-// @Param 			request body entity.UpdateMenuColumnsRequest true "Update User Columns Model"
+// @Param 			request body entity.UpdateMenuColumnsRequest true "Update Menu Columns Model"
 // @Success 		200 {object} entity.UpdateMenuResponse
 // @Failure 		400 {object} errors.Error
 // @Failure 		401 {object} errors.Error

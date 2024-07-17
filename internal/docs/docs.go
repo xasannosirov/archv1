@@ -968,7 +968,7 @@ const docTemplate = `{
                 "summary": "Update Menu",
                 "parameters": [
                     {
-                        "description": "Update User Model",
+                        "description": "Update Menu Model",
                         "name": "request",
                         "in": "body",
                         "required": true,
@@ -1035,7 +1035,7 @@ const docTemplate = `{
                 "summary": "Create Menu",
                 "parameters": [
                     {
-                        "description": "Create User Model",
+                        "description": "Create Menu Model",
                         "name": "request",
                         "in": "body",
                         "required": true,
@@ -1096,7 +1096,7 @@ const docTemplate = `{
                 "summary": "Update Menu Columns",
                 "parameters": [
                     {
-                        "description": "Update User Columns Model",
+                        "description": "Update Menu Columns Model",
                         "name": "request",
                         "in": "body",
                         "required": true,

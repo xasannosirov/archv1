@@ -189,7 +189,7 @@ func (f *ControllerFileStore) UpdateFolder(c *gin.Context) {
 // UpdateFolderColumns
 // @Security 			BearerAuth
 // @Summary 			Update Folder Columns
-// Description 			This API for updating a folder
+// Description 			This API for updating a folder columns
 // @Tags 				folder-storage
 // @Accept 				json
 // @Produce 			json
@@ -428,7 +428,7 @@ func (f *ControllerFileStore) UpdateFile(c *gin.Context) {
 // UpdateFileColumns
 // @Security 			BearerAuth
 // @Summary 			Update File Columns
-// Description 			This API for updating a file
+// Description 			This API for updating a file columns
 // @Tags 				file-storage
 // @Accept 				json
 // @Produce 			json

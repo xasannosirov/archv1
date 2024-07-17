@@ -1221,7 +1221,7 @@ paths:
       - application/json
       description: This API for updating a menu columns
       parameters:
-      - description: Update User Columns Model
+      - description: Update Menu Columns Model
         in: body
         name: request
         required: true
@@ -1264,7 +1264,7 @@ paths:
       - application/json
       description: This API for creating a new menu
       parameters:
-      - description: Create User Model
+      - description: Create Menu Model
         in: body
         name: request
         required: true
@@ -1303,7 +1303,7 @@ paths:
       - application/json
       description: This API for updating a menu
       parameters:
-      - description: Update User Model
+      - description: Update Menu Model
         in: body
         name: request
         required: true

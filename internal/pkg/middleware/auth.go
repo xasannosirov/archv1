@@ -1,12 +1,12 @@
 package middleware
 
 import (
+	"archv1/internal/pkg/config"
 	"archv1/internal/pkg/errors"
+	"archv1/internal/pkg/tokens"
 	"log"
 	"net/http"
-
-	"archv1/internal/pkg/config"
-	"archv1/internal/pkg/tokens"
+	"strings"
 
 	"github.com/casbin/casbin/v2"
 	"github.com/gin-gonic/gin"
@@ -74,6 +74,10 @@ func (a *JWTRoleAuth) GetRole(r *http.Request) (string, error) {
 	jwtToken := r.Header.Get("Authorization")
 	if jwtToken == "" {
 		return "unauthorized", nil
+	}
+
+	if strings.Contains(jwtToken, "Bearer") {
+		jwtToken = strings.Split(jwtToken, "Bearer ")[1]
 	}
 
 	a.jwtHandler.Token = jwtToken

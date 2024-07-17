@@ -121,7 +121,7 @@ func (p *ControllerPost) GetByID(c *gin.Context) {
 func (p *ControllerPost) Create(c *gin.Context) {
 	var request entity.CreatePostRequest
 
-	if err := c.ShouldBindJSON(&request); err != nil {
+	if err := c.ShouldBind(&request); err != nil {
 		errors.ErrorResponse(c, http.StatusBadRequest, err.Error())
 
 		return
@@ -164,7 +164,7 @@ func (p *ControllerPost) Create(c *gin.Context) {
 func (p *ControllerPost) Update(c *gin.Context) {
 	var request entity.UpdatePostRequest
 
-	if err := c.ShouldBindJSON(&request); err != nil {
+	if err := c.ShouldBind(&request); err != nil {
 		errors.ErrorResponse(c, http.StatusBadRequest, err.Error())
 
 		return
@@ -207,7 +207,7 @@ func (p *ControllerPost) Update(c *gin.Context) {
 func (p *ControllerPost) UpdateColumns(c *gin.Context) {
 	var request entity.UpdatePostColumnsRequest
 
-	if err := c.ShouldBindJSON(&request); err != nil {
+	if err := c.ShouldBind(&request); err != nil {
 		errors.ErrorResponse(c, http.StatusBadRequest, err.Error())
 
 		return

@@ -161,7 +161,7 @@ func (m *ControllerMenu) GetByID(c *gin.Context) {
 func (m *ControllerMenu) Create(c *gin.Context) {
 	var request entity.CreateMenuRequest
 
-	if err := c.ShouldBindJSON(&request); err != nil {
+	if err := c.ShouldBind(&request); err != nil {
 		errors.ErrorResponse(c, http.StatusBadRequest, err.Error())
 
 		return
@@ -204,7 +204,7 @@ func (m *ControllerMenu) Create(c *gin.Context) {
 func (m *ControllerMenu) Update(c *gin.Context) {
 	var request entity.UpdateMenuRequest
 
-	if err := c.ShouldBindJSON(&request); err != nil {
+	if err := c.ShouldBind(&request); err != nil {
 		errors.ErrorResponse(c, http.StatusBadRequest, err.Error())
 
 		return
@@ -247,7 +247,7 @@ func (m *ControllerMenu) Update(c *gin.Context) {
 func (m *ControllerMenu) UpdateColumns(c *gin.Context) {
 	var request entity.UpdateMenuColumnsRequest
 
-	if err := c.ShouldBindJSON(&request); err != nil {
+	if err := c.ShouldBind(&request); err != nil {
 		errors.ErrorResponse(c, http.StatusBadRequest, err.Error())
 
 		return

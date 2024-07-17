@@ -18,15 +18,15 @@ type Menus struct {
 }
 
 type CreateMenuRequest struct {
-	Title     map[string]string `json:"title"`
-	Content   map[string]string `json:"content"`
-	IsStatic  bool              `json:"is_static"`
-	Sort      int               `json:"sort"`
-	ParentID  *int              `json:"parent_id"`
-	Status    bool              `json:"status"`
-	Slug      string            `json:"slug"`
-	Path      string            `json:"path"`
-	CreatedBy int               `json:"-"`
+	Title     map[string]string `json:"title" xml:"title" yaml:"title" toml:"title" form:"title" query:"title"`
+	Content   map[string]string `json:"content" xml:"content" yaml:"content" toml:"content" form:"content" query:"content"`
+	IsStatic  bool              `json:"is_static" xml:"is_static" yaml:"is_static" toml:"is_static" form:"is_static" query:"is_static"`
+	Sort      int               `json:"sort" xml:"sort" yaml:"sort" toml:"sort" form:"sort" query:"sort"`
+	ParentID  *int              `json:"parent_id" xml:"parent_id" yaml:"parent_id" toml:"parent_id" form:"parent_id" query:"parent_id"`
+	Status    bool              `json:"status" xml:"status" yaml:"status" toml:"status" form:"status" query:"status"`
+	Slug      string            `json:"slug" xml:"slug" yaml:"slug" toml:"slug" form:"slug" query:"slug"`
+	Path      string            `json:"path" xml:"path" yaml:"path" toml:"path" form:"path" query:"path"`
+	CreatedBy int               `json:"-" bun:"created_by"`
 }
 
 type CreateMenuResponse struct {
@@ -43,16 +43,16 @@ type CreateMenuResponse struct {
 }
 
 type UpdateMenuRequest struct {
-	ID        int               `json:"id"`
-	Title     map[string]string `json:"title"`
-	Content   map[string]string `json:"content"`
-	IsStatic  bool              `json:"is_static"`
-	Sort      int               `json:"sort"`
-	ParentID  *int              `json:"parent_id"`
-	Status    bool              `json:"status"`
-	Slug      string            `json:"slug"`
-	Path      string            `json:"path"`
-	UpdatedBy int               `json:"-"`
+	ID        int               `json:"id" xml:"id" yaml:"id" toml:"id" form:"id" query:"id"`
+	Title     map[string]string `json:"title" xml:"title" yaml:"title" toml:"title" form:"title" query:"title"`
+	Content   map[string]string `json:"content" xml:"content" yaml:"content" toml:"content" form:"content" query:"content"`
+	IsStatic  bool              `json:"is_static" xml:"is_static" yaml:"is_static" toml:"is_static" form:"is_static" query:"is_static"`
+	Sort      int               `json:"sort" xml:"sort" yaml:"sort" toml:"sort" form:"sort" query:"sort"`
+	ParentID  *int              `json:"parent_id" xml:"parent_id" yaml:"parent_id" toml:"parent_id" form:"parent_id" query:"parent_id"`
+	Status    bool              `json:"status" xml:"status" yaml:"status" toml:"status" form:"status" query:"status"`
+	Slug      string            `json:"slug" xml:"slug" yaml:"slug" toml:"slug" form:"slug" query:"slug"`
+	Path      string            `json:"path" xml:"path" yaml:"path" toml:"path" form:"path" query:"path"`
+	UpdatedBy int               `json:"-" bun:"updated_by"`
 }
 
 type UpdateMenuResponse struct {
@@ -69,8 +69,8 @@ type UpdateMenuResponse struct {
 }
 
 type UpdateMenuColumnsRequest struct {
-	ID     int               `json:"id"`
-	Fields map[string]string `json:"fields"`
+	ID     int               `json:"id" xml:"id" yaml:"id" toml:"id" form:"id" query:"id"`
+	Fields map[string]string `json:"fields" xml:"fields" yaml:"fields" toml:"fields" form:"fields" query:"fields"`
 }
 
 type DeleteMenuResponse struct {

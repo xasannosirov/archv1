@@ -118,7 +118,7 @@ func (f *ControllerFileStore) GetFolder(c *gin.Context) {
 func (f *ControllerFileStore) CreateFolder(c *gin.Context) {
 	var request entity.CreateFolderRequest
 
-	if err := c.ShouldBindJSON(&request); err != nil {
+	if err := c.ShouldBind(&request); err != nil {
 		errors.ErrorResponse(c, http.StatusBadRequest, err.Error())
 
 		return
@@ -161,7 +161,7 @@ func (f *ControllerFileStore) CreateFolder(c *gin.Context) {
 func (f *ControllerFileStore) UpdateFolder(c *gin.Context) {
 	var request entity.UpdateFolderRequest
 
-	if err := c.ShouldBindJSON(&request); err != nil {
+	if err := c.ShouldBind(&request); err != nil {
 		errors.ErrorResponse(c, http.StatusBadRequest, err.Error())
 
 		return
@@ -204,7 +204,7 @@ func (f *ControllerFileStore) UpdateFolder(c *gin.Context) {
 func (f *ControllerFileStore) UpdateFolderColumns(c *gin.Context) {
 	var request entity.UpdateFolderColumnsRequest
 
-	if err := c.ShouldBindJSON(&request); err != nil {
+	if err := c.ShouldBind(&request); err != nil {
 		errors.ErrorResponse(c, http.StatusBadRequest, err.Error())
 
 		return
@@ -357,7 +357,7 @@ func (f *ControllerFileStore) GetFile(c *gin.Context) {
 func (f *ControllerFileStore) CreateFile(c *gin.Context) {
 	var request entity.CreateFileRequest
 
-	if err := c.ShouldBindJSON(&request); err != nil {
+	if err := c.ShouldBind(&request); err != nil {
 		errors.ErrorResponse(c, http.StatusBadRequest, err.Error())
 
 		return
@@ -400,7 +400,7 @@ func (f *ControllerFileStore) CreateFile(c *gin.Context) {
 func (f *ControllerFileStore) UpdateFile(c *gin.Context) {
 	var request entity.UpdateFileRequest
 
-	if err := c.ShouldBindJSON(&request); err != nil {
+	if err := c.ShouldBind(&request); err != nil {
 		errors.ErrorResponse(c, http.StatusBadRequest, err.Error())
 
 		return
@@ -443,7 +443,7 @@ func (f *ControllerFileStore) UpdateFile(c *gin.Context) {
 func (f *ControllerFileStore) UpdateFileColumns(c *gin.Context) {
 	var request entity.UpdateFileColumnsRequest
 
-	if err := c.ShouldBindJSON(&request); err != nil {
+	if err := c.ShouldBind(&request); err != nil {
 		errors.ErrorResponse(c, http.StatusBadRequest, err.Error())
 
 		return

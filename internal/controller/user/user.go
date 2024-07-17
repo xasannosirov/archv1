@@ -123,7 +123,7 @@ func (u *ControllerUser) GetByID(c *gin.Context) {
 func (u *ControllerUser) Create(c *gin.Context) {
 	var request entity.CreateUserRequest
 
-	if err := c.ShouldBindJSON(&request); err != nil {
+	if err := c.ShouldBind(&request); err != nil {
 		errors.ErrorResponse(c, http.StatusBadRequest, err.Error())
 
 		return
@@ -193,7 +193,7 @@ func (u *ControllerUser) Create(c *gin.Context) {
 func (u *ControllerUser) Update(c *gin.Context) {
 	var request entity.UpdateUserRequest
 
-	if err := c.ShouldBindJSON(&request); err != nil {
+	if err := c.ShouldBind(&request); err != nil {
 		errors.ErrorResponse(c, http.StatusBadRequest, err.Error())
 
 		return
@@ -262,7 +262,7 @@ func (u *ControllerUser) Update(c *gin.Context) {
 func (u *ControllerUser) UpdateColumns(c *gin.Context) {
 	var request entity.UpdateUserColumnsRequest
 
-	if err := c.ShouldBindJSON(&request); err != nil {
+	if err := c.ShouldBind(&request); err != nil {
 		errors.ErrorResponse(c, http.StatusBadRequest, err.Error())
 
 		return

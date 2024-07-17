@@ -18,9 +18,9 @@ type Files struct {
 }
 
 type CreateFolderRequest struct {
-	Name      string `json:"name"`
-	ParentID  *int   `json:"parent_id"`
-	CreatedBy int    `json:"-"`
+	Name      string `json:"name" xml:"name" yaml:"name" toml:"name" form:"name" query:"name"`
+	ParentID  *int   `json:"parent_id" xml:"parent_id" yaml:"parent_id" toml:"parent_id" form:"parent_id" query:"parent_id"`
+	CreatedBy int    `json:"-" bun:"created_by"`
 }
 
 type CreateFolderResponse struct {
@@ -30,15 +30,15 @@ type CreateFolderResponse struct {
 }
 
 type UpdateFolderRequest struct {
-	ID        *int   `json:"id"`
-	Name      string `json:"name"`
-	ParentID  *int   `json:"parent_id"`
-	UpdatedBy int    `json:"-"`
+	ID        *int   `json:"id" xml:"id" yaml:"id" toml:"id" form:"id" query:"id"`
+	Name      string `json:"name" xml:"name" yaml:"name" toml:"name" form:"name" query:"name"`
+	ParentID  *int   `json:"parent_id" xml:"parent_id" yaml:"parent_id" toml:"parent_id" form:"parent_id" query:"parent_id"`
+	UpdatedBy int    `json:"-" bun:"updated_by"`
 }
 
 type UpdateFolderColumnsRequest struct {
-	Fields   map[string]string `json:"fields"`
-	FolderID int               `json:"folder_id"`
+	Fields   map[string]string `json:"fields" xml:"fields" yaml:"fields" toml:"fields" form:"fields" query:"fields"`
+	FolderID int               `json:"folder_id" xml:"folder_id" yaml:"folder_id" toml:"folder_id" form:"folder_id" query:"folder_id"`
 }
 
 type UpdateFolderResponse struct {
@@ -63,10 +63,10 @@ type ListFolderResponse struct {
 }
 
 type CreateFileRequest struct {
-	Type      string `json:"type"`
-	Link      string `json:"link"`
-	FolderID  *int   `json:"folder_id"`
-	CreatedBy int    `json:"-"`
+	Type      string `json:"type" xml:"type" yaml:"type" toml:"type" form:"type" query:"type"`
+	Link      string `json:"link" xml:"link" yaml:"link" toml:"link" form:"link" query:"link"`
+	FolderID  *int   `json:"folder_id" xml:"folder_id" yaml:"folder_id" toml:"folder_id" form:"folder_id" query:"folder_id"`
+	CreatedBy int    `json:"-" bun:"created_by"`
 }
 
 type CreateFileResponse struct {
@@ -77,16 +77,16 @@ type CreateFileResponse struct {
 }
 
 type UpdateFileRequest struct {
-	ID        int    `json:"id"`
-	Type      string `json:"type"`
-	Link      string `json:"link"`
-	FolderID  *int   `json:"folder_id"`
-	UpdatedBy int    `json:"-"`
+	ID        int    `json:"id" xml:"id" yaml:"id" toml:"id" form:"id" query:"id"`
+	Type      string `json:"type" xml:"type" yaml:"type" toml:"type" form:"type" query:"type"`
+	Link      string `json:"link" xml:"link" yaml:"link" toml:"link" form:"link" query:"link"`
+	FolderID  *int   `json:"folder_id" xml:"folder_id" yaml:"folder_id" toml:"folder_id" form:"folder_id" query:"folder_id"`
+	UpdatedBy int    `json:"-" bun:"updated_by"`
 }
 
 type UpdateFileColumnsRequest struct {
-	Fields map[string]string `json:"fields"`
-	FileID int               `json:"file_id"`
+	Fields map[string]string `json:"fields" xml:"fields" yaml:"fields" toml:"fields" form:"fields" query:"fields"`
+	FileID int               `json:"file_id" xml:"file_id" yaml:"file_id" toml:"file_id" form:"file_id" query:"file_id"`
 }
 
 type UpdateFileResponse struct {

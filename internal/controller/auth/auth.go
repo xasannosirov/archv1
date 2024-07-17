@@ -51,7 +51,7 @@ func NewAuthController(controller *ControllerAuth) ControllerAuth {
 func (a *ControllerAuth) Register(c *gin.Context) {
 	var request entity.RegisterRequest
 
-	if err := c.ShouldBindJSON(&request); err != nil {
+	if err := c.ShouldBind(&request); err != nil {
 		errors.ErrorResponse(c, http.StatusBadRequest, err.Error())
 
 		return
@@ -144,7 +144,7 @@ func (a *ControllerAuth) Register(c *gin.Context) {
 func (a *ControllerAuth) Login(c *gin.Context) {
 	var request entity.LoginRequest
 
-	if err := c.ShouldBindJSON(&request); err != nil {
+	if err := c.ShouldBind(&request); err != nil {
 		errors.ErrorResponse(c, http.StatusBadRequest, err.Error())
 
 		return

@@ -15,11 +15,11 @@ type Users struct {
 }
 
 type CreateUserRequest struct {
-	Username  string `json:"username"`
-	Password  string `json:"password"`
-	Role      string `json:"role"`
-	Status    bool   `json:"status"`
-	CreatedBy int    `json:"-"`
+	Username  string `json:"username" xml:"username" yaml:"username" toml:"username" form:"username" query:"username"`
+	Password  string `json:"password" xml:"password" yaml:"password" toml:"password" form:"password" query:"password"`
+	Role      string `json:"role" xml:"role" yaml:"role" toml:"role" form:"role" query:"role"`
+	Status    bool   `json:"status" xml:"status" yaml:"status" toml:"status" form:"status" query:"status"`
+	CreatedBy int    `json:"-" bun:"created_by"`
 }
 
 type CreateUserResponse struct {
@@ -31,13 +31,13 @@ type CreateUserResponse struct {
 }
 
 type UpdateUserRequest struct {
-	Id        int     `json:"id"`
-	Username  string  `json:"username"`
-	Password  string  `json:"password"`
-	Role      string  `json:"role"`
-	Status    bool    `json:"status"`
-	Refresh   *string `json:"refresh"`
-	UpdatedBy int     `json:"-"`
+	Id        int     `json:"id" xml:"id" yaml:"id" toml:"id" query:"id" form:"id"`
+	Username  string  `json:"username" xml:"username" yaml:"username" toml:"username" form:"username" query:"username"`
+	Password  string  `json:"password" xml:"password" yaml:"password" toml:"password" form:"password" query:"password"`
+	Role      string  `json:"role" xml:"role" yaml:"role" toml:"role" form:"role" query:"role"`
+	Status    bool    `json:"status" xml:"status" yaml:"status" toml:"status" form:"status" query:"status"`
+	Refresh   *string `json:"refresh" xml:"refresh" yaml:"refresh" toml:"refresh" form:"refresh" query:"refresh"`
+	UpdatedBy int     `json:"-" bun:"updated_by"`
 }
 
 type UpdateUserResponse struct {
@@ -49,8 +49,8 @@ type UpdateUserResponse struct {
 }
 
 type UpdateUserColumnsRequest struct {
-	ID     int               `json:"id"`
-	Fields map[string]string `json:"fields"`
+	ID     int               `json:"id" xml:"id" yaml:"id" toml:"id" form:"id" query:"id"`
+	Fields map[string]string `json:"fields" xml:"fields" yaml:"fields" toml:"fields" form:"fields" query:"fields"`
 }
 
 type DeleteUserResponse struct {
@@ -67,8 +67,8 @@ type GetUserResponse struct {
 }
 
 type Filter struct {
-	Limit int64 `json:"limit"`
-	Page  int64 `json:"page"`
+	Limit int64 `json:"limit" xml:"limit" yaml:"limit" toml:"limit" form:"limit" query:"limit"`
+	Page  int64 `json:"page" xml:"page" yaml:"page" toml:"page" form:"page" query:"page"`
 }
 
 type ListUserResponse struct {

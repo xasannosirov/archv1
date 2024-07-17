@@ -4,6 +4,7 @@ import (
 	"archv1/internal/entity"
 	"archv1/internal/pkg/repo/postgres"
 	"context"
+	"database/sql"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -50,9 +51,9 @@ func (r *Repo) List(ctx context.Context, filter entity.Filter, lang string) (ent
 
 	for rows.Next() {
 		var (
-			title        string
-			content      string
-			shortContent string
+			title        sql.NullString
+			content      sql.NullString
+			shortContent sql.NullString
 			files        pq.StringArray
 			post         entity.GetPostResponse
 		)
@@ -70,9 +71,15 @@ func (r *Repo) List(ctx context.Context, filter entity.Filter, lang string) (ent
 			return entity.ListPostResponse{}, err
 		}
 
-		post.Title = map[string]string{lang: title}
-		post.Content = map[string]string{lang: content}
-		post.ShortContent = map[string]string{lang: shortContent}
+		if title.Valid {
+			post.Title = map[string]string{lang: title.String}
+		}
+		if content.Valid {
+			post.Content = map[string]string{lang: content.String}
+		}
+		if shortContent.Valid {
+			post.ShortContent = map[string]string{lang: shortContent.String}
+		}
 
 		post.Files = files
 
@@ -92,9 +99,9 @@ func (r *Repo) List(ctx context.Context, filter entity.Filter, lang string) (ent
 
 func (r *Repo) GetByID(ctx context.Context, postID int, lang string) (entity.GetPostResponse, error) {
 	var (
-		title        string
-		content      string
-		shortContent string
+		title        sql.NullString
+		content      sql.NullString
+		shortContent sql.NullString
 		files        pq.StringArray
 		response     entity.GetPostResponse
 	)
@@ -131,9 +138,15 @@ func (r *Repo) GetByID(ctx context.Context, postID int, lang string) (entity.Get
 
 	response.Files = files
 
-	response.Title = map[string]string{lang: title}
-	response.Content = map[string]string{lang: content}
-	response.ShortContent = map[string]string{lang: shortContent}
+	if title.Valid {
+		response.Title = map[string]string{lang: title.String}
+	}
+	if content.Valid {
+		response.Content = map[string]string{lang: content.String}
+	}
+	if shortContent.Valid {
+		response.ShortContent = map[string]string{lang: shortContent.String}
+	}
 
 	return response, nil
 }

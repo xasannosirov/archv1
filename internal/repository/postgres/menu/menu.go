@@ -46,8 +46,8 @@ func (r *Repo) getChildMenus(ctx context.Context, parentID int, lang string) ([]
 	var response []interface{}
 	for rows.Next() {
 		var (
-			title   string
-			content string
+			title   sql.NullString
+			content sql.NullString
 			menu    entity.ParentMenuWithChildren
 		)
 		err = rows.Scan(
@@ -64,8 +64,12 @@ func (r *Repo) getChildMenus(ctx context.Context, parentID int, lang string) ([]
 			return nil, err
 		}
 
-		menu.ParentMenu.Title = map[string]string{lang: title}
-		menu.ParentMenu.Content = map[string]string{lang: content}
+		if title.Valid {
+			menu.ParentMenu.Title = map[string]string{lang: title.String}
+		}
+		if content.Valid {
+			menu.ParentMenu.Content = map[string]string{lang: content.String}
+		}
 
 		menu.Children, err = r.getChildMenus(ctx, menu.ParentMenu.ID, lang)
 		if err != nil {
@@ -108,8 +112,8 @@ func (r *Repo) GetSiteMenus(ctx context.Context, filter entity.Filter, lang stri
 
 	for rows.Next() {
 		var (
-			title              string
-			content            string
+			title              sql.NullString
+			content            sql.NullString
 			parentWithChildren entity.ParentMenuWithChildren
 		)
 		err := rows.Scan(
@@ -126,8 +130,12 @@ func (r *Repo) GetSiteMenus(ctx context.Context, filter entity.Filter, lang stri
 			return entity.SiteMenuListResponse{}, err
 		}
 
-		parentWithChildren.ParentMenu.Title = map[string]string{lang: title}
-		parentWithChildren.ParentMenu.Content = map[string]string{lang: content}
+		if title.Valid {
+			parentWithChildren.ParentMenu.Title = map[string]string{lang: title.String}
+		}
+		if content.Valid {
+			parentWithChildren.ParentMenu.Content = map[string]string{lang: content.String}
+		}
 
 		children, err := r.getChildMenus(ctx, parentWithChildren.ParentMenu.ID, lang)
 		if err != nil {
@@ -181,8 +189,8 @@ func (r *Repo) List(ctx context.Context, filter entity.Filter, lang string) (ent
 
 	for rows.Next() {
 		var (
-			title   string
-			content string
+			title   sql.NullString
+			content sql.NullString
 			files   pq.StringArray
 			menu    entity.GetMenuResponse
 		)
@@ -202,8 +210,12 @@ func (r *Repo) List(ctx context.Context, filter entity.Filter, lang string) (ent
 			return entity.ListMenuResponse{}, err
 		}
 
-		menu.Title = map[string]string{lang: title}
-		menu.Content = map[string]string{lang: content}
+		if title.Valid {
+			menu.Title = map[string]string{lang: title.String}
+		}
+		if content.Valid {
+			menu.Content = map[string]string{lang: content.String}
+		}
 
 		menu.Files = files
 

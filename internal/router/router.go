@@ -67,10 +67,6 @@ func New(option *Router) *gin.Engine {
 		SigningKey: option.Conf.JWTSecret,
 	}
 
-	router.Use(middleware.NewAuthorizer(option.Enforcer, jwtHandler, *option.Conf))
-
-	apiV1 := router.Group("/v1")
-
 	userRepository := userRepo.NewUserRepo(option.PostgresDB)
 	menuRepository := menuRepo.NewMenuRepo(option.PostgresDB)
 	authRepository := authRepo.NewAuthRepo(option.PostgresDB)
@@ -139,6 +135,12 @@ func New(option *Router) *gin.Engine {
 		Enforcer:    option.Enforcer,
 		FileUseCase: fileStoreUseCaseI,
 	})
+
+	router.POST("/v1/auth/login", authController.Login)
+
+	router.Use(middleware.NewAuthorizer(option.Enforcer, jwtHandler, *option.Conf))
+
+	apiV1 := router.Group("/v1")
 
 	// Auth APIs
 	apiV1.POST("/auth/register", authController.Register)

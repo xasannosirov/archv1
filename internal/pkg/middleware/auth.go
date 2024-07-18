@@ -102,7 +102,7 @@ func (a *JWTRoleAuth) GetRole(r *http.Request) (string, error) {
 // RequireRefresh response with 401
 func (a *JWTRoleAuth) RequireRefresh(c *gin.Context) {
 	c.JSON(http.StatusUnauthorized, errors.Error{
-		Message: "Require refresh",
+		Message: "Token was expired",
 	})
 	c.AbortWithStatus(401)
 }

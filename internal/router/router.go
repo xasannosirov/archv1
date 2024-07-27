@@ -144,11 +144,6 @@ func New(option *Router) *gin.Engine {
 
 	apiV1 := router.Group("/v1")
 
-	//// Auth APIs
-	//apiV1.POST("/auth/register", authController.Register)
-	//apiV1.POST("/auth/login", authController.Login)
-	//apiV1.GET("/auth/new-access/:refresh", authController.NewAccessToken)
-
 	// User APIs
 	apiV1.GET("/user/list", userController.List)
 	apiV1.GET("/user/:id", userController.GetByID)

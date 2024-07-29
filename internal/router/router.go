@@ -2,6 +2,7 @@ package router
 
 import (
 	authCont "archv1/internal/controller/auth"
+	chatCont "archv1/internal/controller/chat"
 	fileStoreCont "archv1/internal/controller/fileStore"
 	fileCont "archv1/internal/controller/files"
 	menuCont "archv1/internal/controller/menu"
@@ -14,21 +15,24 @@ import (
 	"archv1/internal/pkg/repo/redis"
 	"archv1/internal/pkg/tokens"
 	authRepo "archv1/internal/repository/postgres/auth"
+	chatRepo "archv1/internal/repository/postgres/chat"
 	fileStoreRepo "archv1/internal/repository/postgres/fileStore"
 	menuRepo "archv1/internal/repository/postgres/menu"
 	postRepo "archv1/internal/repository/postgres/post"
 	userRepo "archv1/internal/repository/postgres/user"
 	authService "archv1/internal/service/auth"
+	chatService "archv1/internal/service/chat"
 	fileStoreService "archv1/internal/service/fileStore"
 	menuService "archv1/internal/service/menu"
 	postService "archv1/internal/service/post"
 	userService "archv1/internal/service/user"
 	authUseCase "archv1/internal/usecase/auth"
+	chatUseCase "archv1/internal/usecase/chat"
 	fileStoreUseCase "archv1/internal/usecase/fileStore"
 	menuUseCase "archv1/internal/usecase/menu"
 	postUseCase "archv1/internal/usecase/post"
 	userUseCase "archv1/internal/usecase/user"
-
+	"archv1/internal/websocket"
 	"github.com/casbin/casbin/v2"
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
@@ -39,6 +43,7 @@ import (
 
 type Router struct {
 	Conf       *config.Config
+	Hub        *websocket.Hub
 	PostgresDB *postgres.DB
 	RedisCache *redis.Redis
 	Enforcer   *casbin.Enforcer
@@ -71,18 +76,21 @@ func New(option *Router) *gin.Engine {
 	menuRepository := menuRepo.NewMenuRepo(option.PostgresDB)
 	authRepository := authRepo.NewAuthRepo(option.PostgresDB)
 	postRepository := postRepo.NewPostRepo(option.PostgresDB)
+	chatRepository := chatRepo.NewChatRepo(option.PostgresDB)
 	fileStoreRepository := fileStoreRepo.NewFileStoreRepo(option.PostgresDB)
 
 	userServiceI := userService.NewUserService(userRepository)
 	menuServiceI := menuService.NewMenuService(menuRepository)
 	authServiceI := authService.NewAuthService(authRepository)
 	postServiceI := postService.NewPostService(postRepository)
+	chatServiceI := chatService.NewChatService(chatRepository)
 	fileStoreServiceI := fileStoreService.NewFilesStoreService(fileStoreRepository)
 
 	userUseCaseI := userUseCase.NewUserUseCase(userServiceI)
 	menuUseCaseI := menuUseCase.NewMenuUseCase(menuServiceI)
 	authUseCaseI := authUseCase.NewAuthUseCase(authServiceI)
 	postUseCaseI := postUseCase.NewPostUseCase(postServiceI)
+	chatUseCaseI := chatUseCase.NewChatUseCase(chatServiceI)
 	fileStoreUseCaseI := fileStoreUseCase.NewFilesStoreUseCase(fileStoreServiceI)
 
 	userController := userCont.NewUserController(&userCont.ControllerUser{
@@ -136,6 +144,19 @@ func New(option *Router) *gin.Engine {
 		FileUseCase: fileStoreUseCaseI,
 	})
 
+	chatController := chatCont.NewChatController(&chatCont.ChatController{
+		Conf:         option.Conf,
+		Hub:          option.Hub,
+		Postgres:     option.PostgresDB,
+		Redis:        option.RedisCache,
+		Enforcer:     option.Enforcer,
+		ChatUseCaseI: chatUseCaseI,
+	})
+
+	router.GET("/ws", func(c *gin.Context) {
+		websocket.HandleConnection(option.Hub, c.Writer, c.Request)
+	})
+
 	router.POST("/v1/auth/register", authController.Register)
 	router.POST("/v1/auth/login", authController.Login)
 	router.GET("/v1/auth/new-access/:refresh", authController.NewAccessToken)
@@ -143,6 +164,17 @@ func New(option *Router) *gin.Engine {
 	router.Use(middleware.NewAuthorizer(option.Enforcer, jwtHandler, *option.Conf))
 
 	apiV1 := router.Group("/v1")
+
+	// Group APIs
+	router.GET("/group/user-groups", chatController.UserGroups)
+	router.GET("/group/group-users", chatController.GroupUsers)
+	router.GET("/group/:id", chatController.GetGroup)
+	router.POST("/group", chatController.CreateGroup)
+	router.PUT("/group", chatController.UpdateGroup)
+	router.PATCH("/group", chatController.UpdateGroupColumns)
+	router.DELETE("/group/:id", chatController.DeleteGroup)
+	router.POST("/group/add-user", chatController.AddUserToGroup)
+	router.DELETE("/group/remove-user", chatController.RemoveUserFromGroup)
 
 	// User APIs
 	apiV1.GET("/user/list", userController.List)

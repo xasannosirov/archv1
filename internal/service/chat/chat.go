@@ -40,10 +40,22 @@ func (ch *ChatService) DeleteGroup(ctx context.Context, groupID, deletedBy int64
 	return ch.chatRepo.DeleteGroup(ctx, groupID, deletedBy)
 }
 
-func (ch *ChatService) AddUserToGroup(ctx context.Context, userID, groupID, createdBy int64) error {
-	return ch.chatRepo.AddUserToGroup(ctx, userID, groupID, createdBy)
+func (ch *ChatService) AddUserToGroup(ctx context.Context, userID, groupID int64) error {
+	return ch.chatRepo.AddUserToGroup(ctx, userID, groupID)
 }
 
-func (ch *ChatService) RemoveUserFromGroup(ctx context.Context, userID, groupID, deletedBy int64) error {
-	return ch.chatRepo.RemoveUserFromGroup(ctx, userID, groupID, deletedBy)
+func (ch *ChatService) RemoveUserFromGroup(ctx context.Context, userID, groupID int64) error {
+	return ch.chatRepo.RemoveUserFromGroup(ctx, userID, groupID)
+}
+
+func (ch *ChatService) CreateChat(ctx context.Context, creator int64, chatType string) (entity.CreatedChatResponse, error) {
+	return ch.chatRepo.CreateChat(ctx, creator, chatType)
+}
+
+func (ch *ChatService) DeleteChat(ctx context.Context, chatID int64) error {
+	return ch.chatRepo.DeleteChat(ctx, chatID)
+}
+
+func (ch *ChatService) UserChats(ctx context.Context, userID int64) (entity.UserChatsResponse, error) {
+	return ch.chatRepo.UserChats(ctx, userID)
 }

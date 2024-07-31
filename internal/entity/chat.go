@@ -1,7 +1,5 @@
 package entity
 
-// groups
-
 type Groups struct {
 	ID          *int    `bun:"id"`
 	Name        string  `bun:"name"`
@@ -10,9 +8,12 @@ type Groups struct {
 	CreatedBy   int     `bun:"created_by"`
 }
 
-type ListGroupResponse struct {
-	Groups     []*GetGroupResponse `json:"groups"`
-	TotalCount uint64              `json:"total_count"`
+type ResponseWithStatus struct {
+	Status bool `json:"status"`
+}
+
+type ResponseWithMessage struct {
+	Message string `json:"message"`
 }
 
 type GetGroupResponse struct {
@@ -60,121 +61,16 @@ type DeleteGroupResponse struct {
 	Message string `json:"message"`
 }
 
-// chat
+type CreatedChatResponse struct {
+	ChatId   int    `json:"chat_id"`
+	ChatType string `json:"chat_type"`
+	Creator  int    `json:"creator"`
+}
 
 type UserChatsResponse struct {
 	Chats []struct {
-		ChatID  int `json:"chat_id"`
-		Creator int `json:"creator"`
+		ChatID   int    `json:"chat_id"`
+		ChatType string `json:"chat_type"`
+		Creator  int    `json:"creator"`
 	}
-}
-
-type CreateChatRequest struct {
-	Creator int `json:"creator"`
-}
-
-type CreateChatResponse struct {
-	ChatId  int    `json:"chat_id"`
-	Creator string `json:"creator"`
-}
-
-type DeleteChatResponse struct {
-	Message string `json:"message"`
-}
-
-// messages
-
-type SendMessageRequest struct {
-	ChatId      int    `json:"chat_id"`
-	ChatType    string `json:"chat_type"`
-	Sender      int    `json:"sender"`
-	Content     string `json:"content"`
-	MessageType string `json:"message_type"`
-}
-
-type SendMessageResponse struct {
-	Action   string `json:"action"`
-	Property struct {
-		ChatID    int    `json:"chat_id"`
-		ChatType  string `json:"chat_type"`
-		Sender    int    `json:"sender"`
-		MessageID int    `json:"message_id"`
-		Content   string `json:"content"`
-		SendTime  string `json:"send_time"`
-	}
-}
-
-type UpdateMessageRequest struct {
-	ChatId     int    `json:"chat_id"`
-	ChatType   string `json:"chat_type"`
-	Sender     int    `json:"sender"`
-	MessageID  int    `json:"message_id"`
-	NewContent string `json:"new_content"`
-}
-
-type UpdateMessageResponse struct {
-	Action   string `json:"action"`
-	Property struct {
-		ChatID     int    `json:"chat_id"`
-		ChatType   string `json:"chat_type"`
-		Sender     int    `json:"sender"`
-		MessageID  int    `json:"message_id"`
-		NewContent string `json:"new_content"`
-		SendTime   string `json:"send_time"`
-	}
-}
-
-type DeleteMessageResponse struct {
-	Action   string `json:"action"`
-	Property struct {
-		ChatID    int    `json:"chat_id"`
-		ChatType  string `json:"chat_type"`
-		Sender    int    `json:"sender"`
-		MessageID int    `json:"message_id"`
-	}
-}
-
-type SendFileMessageRequest struct {
-	ChatId   int    `json:"chat_id"`
-	ChatType string `json:"chat_type"`
-	Sender   int    `json:"sender"`
-	FileURL  string `json:"file_url"`
-}
-
-type SendFileMessageResponse struct {
-	Action   string `json:"action"`
-	Property struct {
-		ChatID     int    `json:"chat_id"`
-		ChatType   string `json:"chat_type"`
-		Sender     int    `json:"sender"`
-		MessageID  int    `json:"message_id"`
-		NewFileUrl string `json:"new_file_url"`
-		SendTime   string `json:"send_time"`
-	}
-}
-
-type DeleteFileMessageResponse struct {
-	Action   string `json:"action"`
-	Property struct {
-		ChatID    int    `json:"chat_id"`
-		ChatType  string `json:"chat_type"`
-		Sender    int    `json:"sender"`
-		MessageID int    `json:"message_id"`
-	}
-}
-
-type Message struct {
-	MessageID   int    `json:"message_id"`
-	Content     string `json:"content"`
-	MessageType string `json:"message_type"`
-	Sender      int    `json:"sender"`
-	SendTime    string `json:"send_time"`
-}
-
-type ChatMessagesResponse struct {
-	Messages []Message `json:"messages"`
-}
-
-type GroupMessagesResponse struct {
-	Messages []Message `json:"messages"`
 }

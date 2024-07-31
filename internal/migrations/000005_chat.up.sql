@@ -33,6 +33,7 @@ CREATE TABLE IF NOT EXISTS group_users (
 
 CREATE TABLE IF NOT EXISTS chat (
     id SERIAL PRIMARY KEY,
+    type VARCHAR NOT NULL,
     creator INT NOT NULL,
     created_at TIMESTAMP NOT NULL DEFAULT NOW(),
     created_by INT,

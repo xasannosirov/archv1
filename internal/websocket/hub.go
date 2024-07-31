@@ -7,8 +7,9 @@ import (
 )
 
 type Connection struct {
-	WS   *websocket.Conn
-	Send chan []byte
+	WS       *websocket.Conn
+	Send     chan []byte
+	Username string
 }
 
 type Hub struct {
@@ -46,6 +47,18 @@ func HandleConnection(h *Hub, w http.ResponseWriter, r *http.Request) {
 		},
 	}
 
+	username := r.URL.Query().Get("username")
+
+	for connection := range h.Connections {
+		if connection.Username == username {
+			delete(h.Connections, connection)
+			err := connection.WS.Close()
+			if err != nil {
+				return
+			}
+		}
+	}
+
 	conn, err := socketUpgrade.Upgrade(w, r, nil)
 	if err != nil {
 		log.Println(err)
@@ -53,8 +66,9 @@ func HandleConnection(h *Hub, w http.ResponseWriter, r *http.Request) {
 	}
 
 	connection := &Connection{
-		WS:   conn,
-		Send: make(chan []byte),
+		WS:       conn,
+		Send:     make(chan []byte),
+		Username: username,
 	}
 
 	h.Connections[connection] = true

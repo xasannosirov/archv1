@@ -24,6 +24,26 @@ definitions:
       parent_id:
         type: integer
     type: object
+  entity.CreateGroupRequest:
+    properties:
+      description:
+        type: string
+      name:
+        type: string
+      username:
+        type: string
+    type: object
+  entity.CreateGroupResponse:
+    properties:
+      description:
+        type: string
+      group_id:
+        type: integer
+      name:
+        type: string
+      username:
+        type: string
+    type: object
   entity.CreateMenuRequest:
     properties:
       content:
@@ -158,6 +178,11 @@ definitions:
       message:
         type: string
     type: object
+  entity.DeleteGroupResponse:
+    properties:
+      message:
+        type: string
+    type: object
   entity.DeleteMenuResponse:
     properties:
       message:
@@ -197,6 +222,17 @@ definitions:
         type: string
       parent_id:
         type: integer
+    type: object
+  entity.GetGroupResponse:
+    properties:
+      description:
+        type: string
+      group_id:
+        type: integer
+      name:
+        type: string
+      username:
+        type: string
     type: object
   entity.GetMenuResponse:
     properties:
@@ -377,6 +413,16 @@ definitions:
       username:
         type: string
     type: object
+  entity.ResponseWithMessage:
+    properties:
+      message:
+        type: string
+    type: object
+  entity.ResponseWithStatus:
+    properties:
+      status:
+        type: boolean
+    type: object
   entity.SiteMenuListResponse:
     properties:
       site_menus:
@@ -443,6 +489,37 @@ definitions:
         type: string
       parent_id:
         type: integer
+    type: object
+  entity.UpdateGroupColumns:
+    properties:
+      fields:
+        additionalProperties:
+          type: string
+        type: object
+      group_id:
+        type: integer
+    type: object
+  entity.UpdateGroupRequest:
+    properties:
+      description:
+        type: string
+      group_id:
+        type: integer
+      name:
+        type: string
+      username:
+        type: string
+    type: object
+  entity.UpdateGroupResponse:
+    properties:
+      description:
+        type: string
+      group_id:
+        type: integer
+      name:
+        type: string
+      username:
+        type: string
     type: object
   entity.UpdateMenuColumnsRequest:
     properties:
@@ -606,6 +683,20 @@ definitions:
         type: boolean
       username:
         type: string
+    type: object
+  entity.UserChatsResponse:
+    properties:
+      chats:
+        items:
+          properties:
+            chat_id:
+              type: integer
+            chat_type:
+              type: string
+            creator:
+              type: integer
+          type: object
+        type: array
     type: object
   errors.Error:
     properties:
@@ -1215,6 +1306,408 @@ paths:
       summary: List Folder
       tags:
       - folder-storage
+  /v1/group:
+    patch:
+      consumes:
+      - application/json
+      description: This API for updating a group columns
+      parameters:
+      - description: Update Group Columns Model
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/entity.UpdateGroupColumns'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/entity.UpdateGroupResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/errors.Error'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/errors.Error'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/errors.Error'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/errors.Error'
+      security:
+      - BearerAuth: []
+      summary: Update Group Columns
+      tags:
+      - chat
+    post:
+      consumes:
+      - application/json
+      description: This API for creating a new group
+      parameters:
+      - description: Create Group Model
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/entity.CreateGroupRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/entity.CreateGroupResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/errors.Error'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/errors.Error'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/errors.Error'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/errors.Error'
+      security:
+      - BearerAuth: []
+      summary: Create Group
+      tags:
+      - chat
+    put:
+      consumes:
+      - application/json
+      description: This API for updating a group
+      parameters:
+      - description: Update Group Model
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/entity.UpdateGroupRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/entity.UpdateGroupResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/errors.Error'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/errors.Error'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/errors.Error'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/errors.Error'
+      security:
+      - BearerAuth: []
+      summary: Update Group
+      tags:
+      - chat
+  /v1/group/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: This API for deleting a group
+      parameters:
+      - description: User ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/entity.DeleteGroupResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/errors.Error'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/errors.Error'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/errors.Error'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/errors.Error'
+      security:
+      - BearerAuth: []
+      summary: Delete Group
+      tags:
+      - chat
+    get:
+      consumes:
+      - application/json
+      description: This API for getting group with id
+      parameters:
+      - description: Group ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/entity.GetGroupResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/errors.Error'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/errors.Error'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/errors.Error'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/errors.Error'
+      security:
+      - BearerAuth: []
+      summary: Get Group
+      tags:
+      - chat
+  /v1/group/add-user:
+    post:
+      consumes:
+      - application/json
+      description: This API for adding a new user to group
+      parameters:
+      - description: User ID
+        in: query
+        name: user_id
+        required: true
+        type: integer
+      - description: Group ID
+        in: query
+        name: group_id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/entity.ResponseWithStatus'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/errors.Error'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/errors.Error'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/errors.Error'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/errors.Error'
+      security:
+      - BearerAuth: []
+      summary: Add User to Group
+      tags:
+      - chat
+  /v1/group/delete-chat:
+    delete:
+      consumes:
+      - application/json
+      description: This API for deleting chat with id
+      parameters:
+      - description: Chat ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/entity.ResponseWithMessage'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/errors.Error'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/errors.Error'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/errors.Error'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/errors.Error'
+      security:
+      - BearerAuth: []
+      summary: Delete Chat
+      tags:
+      - chat
+  /v1/group/remove-user:
+    delete:
+      consumes:
+      - application/json
+      description: This API for removing user from group
+      parameters:
+      - description: User ID
+        in: query
+        name: user_id
+        required: true
+        type: integer
+      - description: Group ID
+        in: query
+        name: group_id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/entity.ResponseWithStatus'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/errors.Error'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/errors.Error'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/errors.Error'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/errors.Error'
+      security:
+      - BearerAuth: []
+      summary: Remove User from Group
+      tags:
+      - chat
+  /v1/group/user-chats:
+    get:
+      consumes:
+      - application/json
+      description: This API for getting user chats
+      parameters:
+      - description: User ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/entity.UserChatsResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/errors.Error'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/errors.Error'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/errors.Error'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/errors.Error'
+      security:
+      - BearerAuth: []
+      summary: User Chats
+      tags:
+      - chat
+  /v1/group/user-groups/{id}:
+    get:
+      consumes:
+      - application/json
+      description: This API for getting groups with user id
+      parameters:
+      - description: User ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/entity.GetGroupResponse'
+            type: array
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/errors.Error'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/errors.Error'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/errors.Error'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/errors.Error'
+      security:
+      - BearerAuth: []
+      summary: User Groups
+      tags:
+      - chat
   /v1/menu:
     patch:
       consumes:

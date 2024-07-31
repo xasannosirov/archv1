@@ -153,7 +153,7 @@ func New(option *Router) *gin.Engine {
 		ChatUseCaseI: chatUseCaseI,
 	})
 
-	router.GET("/ws", func(c *gin.Context) {
+	router.GET("/ws/:username", func(c *gin.Context) {
 		websocket.HandleConnection(option.Hub, c.Writer, c.Request)
 	})
 
@@ -165,16 +165,17 @@ func New(option *Router) *gin.Engine {
 
 	apiV1 := router.Group("/v1")
 
-	// Group APIs
-	router.GET("/group/user-groups", chatController.UserGroups)
-	router.GET("/group/group-users", chatController.GroupUsers)
-	router.GET("/group/:id", chatController.GetGroup)
-	router.POST("/group", chatController.CreateGroup)
-	router.PUT("/group", chatController.UpdateGroup)
-	router.PATCH("/group", chatController.UpdateGroupColumns)
-	router.DELETE("/group/:id", chatController.DeleteGroup)
-	router.POST("/group/add-user", chatController.AddUserToGroup)
-	router.DELETE("/group/remove-user", chatController.RemoveUserFromGroup)
+	// Chat APIs
+	apiV1.GET("/group/user-groups/:id", chatController.UserGroups)
+	apiV1.GET("/group/:id", chatController.GetGroup)
+	apiV1.POST("/group", chatController.CreateGroup)
+	apiV1.PUT("/group", chatController.UpdateGroup)
+	apiV1.PATCH("/group", chatController.UpdateGroupColumns)
+	apiV1.DELETE("/group/:id", chatController.DeleteGroup)
+	apiV1.POST("/group/add-user", chatController.AddUserToGroup)
+	apiV1.DELETE("/group/remove-user", chatController.RemoveUserFromGroup)
+	apiV1.GET("/group/user-chats", chatController.UserChats)
+	apiV1.DELETE("/group/delete-chat", chatController.DeleteChat)
 
 	// User APIs
 	apiV1.GET("/user/list", userController.List)

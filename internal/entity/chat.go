@@ -62,26 +62,28 @@ type DeleteGroupResponse struct {
 }
 
 type CreatedChatResponse struct {
-	ChatId   int    `json:"chat_id"`
-	ChatType string `json:"chat_type"`
-	Creator  int    `json:"creator"`
+	ChatId     int    `json:"chat_id"`
+	ChatType   string `json:"chat_type"`
+	ReceiverID int    `json:"receiver_id"`
 }
 
 type UserChatsResponse struct {
 	Chats []struct {
-		ChatID   int    `json:"chat_id"`
-		ChatType string `json:"chat_type"`
-		Creator  int    `json:"creator"`
+		ChatID     int    `json:"chat_id"`
+		ChatType   string `json:"chat_type"`
+		ReceiverID int    `json:"receiver_id"`
 	}
 }
 
 type SendMessageRequest struct {
 	Action   string `json:"action"`
 	Property struct {
-		ChatID   *int   `json:"chat_id"`
-		ChatType string `json:"chat_type"`
-		Message  string `json:"message"`
-		Sender   int    `json:"sender"`
+		ChatID      int    `json:"chat_id"`
+		ChatType    string `json:"chat_type"`
+		Message     string `json:"message"`
+		MessageType string `json:"message_type"`
+		Sender      int    `json:"sender"`
+		Receiver    int    `json:"receiver"`
 	} `json:"property"`
 }
 
@@ -89,7 +91,6 @@ type UpdateMessageRequest struct {
 	Action   string `json:"action"`
 	Property struct {
 		ChatID     int    `json:"chat_id"`
-		ChatType   string `json:"chat_type"`
 		MessageID  int    `json:"message_id"`
 		NewMessage string `json:"new_message"`
 	}
@@ -106,10 +107,11 @@ type DeleteMessageRequest struct {
 
 type ChatMessagesResponse struct {
 	Messages []struct {
-		ChatID   int    `json:"chat_id"`
-		ChatType string `json:"chat_type"`
-		Sender   int    `json:"sender"`
-		Message  string `json:"content"`
+		MessageID   int    `json:"message_id"`
+		ChatID      int    `json:"chat_id"`
+		Sender      int    `json:"sender"`
+		Message     string `json:"content"`
+		MessageType string `json:"message_type"`
 	}
 }
 
@@ -120,5 +122,5 @@ type NotificationsResponse struct {
 		LatestSender       int    `json:"latest_sender"`
 		LatestMessage      string `json:"latest_message"`
 		TotalMessagesCount int    `json:"total_messages_count"`
-	}
+	} `json:"notifications"`
 }

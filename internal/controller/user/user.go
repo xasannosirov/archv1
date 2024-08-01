@@ -5,8 +5,8 @@ import (
 	"archv1/internal/pkg/bcrypt"
 	"archv1/internal/pkg/config"
 	"archv1/internal/pkg/errors"
+	"archv1/internal/pkg/repo/cache"
 	"archv1/internal/pkg/repo/postgres"
-	"archv1/internal/pkg/repo/redis"
 	"archv1/internal/pkg/utils"
 	"archv1/internal/usecase/auth"
 	"archv1/internal/usecase/user"
@@ -23,7 +23,7 @@ import (
 type ControllerUser struct {
 	Conf        *config.Config
 	PostgresDB  *postgres.DB
-	RedisDB     *redis.Redis
+	RedisDB     *cache.Redis
 	Enforcer    *casbin.Enforcer
 	UserUseCase user.UserUseCaseI
 	AuthUseCase auth.AuthUseCaseI

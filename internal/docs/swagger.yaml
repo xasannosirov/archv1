@@ -1,4 +1,22 @@
 definitions:
+  entity.ChatMessagesResponse:
+    properties:
+      messages:
+        items:
+          properties:
+            chat_id:
+              type: integer
+            content:
+              type: string
+            message_id:
+              type: integer
+            message_type:
+              type: string
+            sender:
+              type: integer
+          type: object
+        type: array
+    type: object
   entity.CreateFileRequest:
     properties:
       folder_id:
@@ -385,6 +403,24 @@ definitions:
       username:
         type: string
     type: object
+  entity.NotificationsResponse:
+    properties:
+      notifications:
+        items:
+          properties:
+            chat_id:
+              type: integer
+            chat_type:
+              type: string
+            latest_message:
+              type: string
+            latest_sender:
+              type: integer
+            total_messages_count:
+              type: integer
+          type: object
+        type: array
+    type: object
   entity.ParentMenuWithChildren:
     properties:
       children: {}
@@ -422,6 +458,26 @@ definitions:
     properties:
       status:
         type: boolean
+    type: object
+  entity.SendMessageRequest:
+    properties:
+      action:
+        type: string
+      property:
+        properties:
+          chat_id:
+            type: integer
+          chat_type:
+            type: string
+          message:
+            type: string
+          message_type:
+            type: string
+          receiver:
+            type: integer
+          sender:
+            type: integer
+        type: object
     type: object
   entity.SiteMenuListResponse:
     properties:
@@ -584,6 +640,20 @@ definitions:
           type: string
         type: object
     type: object
+  entity.UpdateMessageRequest:
+    properties:
+      action:
+        type: string
+      property:
+        properties:
+          chat_id:
+            type: integer
+          message_id:
+            type: integer
+          new_message:
+            type: string
+        type: object
+    type: object
   entity.UpdatePostColumnsRequest:
     properties:
       fields:
@@ -693,7 +763,7 @@ definitions:
               type: integer
             chat_type:
               type: string
-            creator:
+            receiver_id:
               type: integer
           type: object
         type: array
@@ -807,6 +877,150 @@ paths:
       summary: Register
       tags:
       - auth
+  /v1/chat-messages:
+    get:
+      consumes:
+      - application/json
+      description: This API for getting chat messages with chat_id
+      parameters:
+      - description: Chat ID
+        in: query
+        name: id
+        required: true
+        type: integer
+      - description: Chat Type
+        in: query
+        name: type
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/entity.ChatMessagesResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/errors.Error'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/errors.Error'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/errors.Error'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/errors.Error'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/errors.Error'
+      security:
+      - BearerAuth: []
+      summary: Get Chat Messages
+      tags:
+      - chat
+  /v1/delete-chat-notifications:
+    delete:
+      consumes:
+      - application/json
+      description: This API for deleting chats notifications for one user
+      parameters:
+      - description: Chat ID
+        in: query
+        name: id
+        required: true
+        type: integer
+      - description: Chat Type
+        in: query
+        name: type
+        required: true
+        type: string
+      - description: Read Message Count
+        in: query
+        name: count
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/entity.ResponseWithStatus'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/errors.Error'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/errors.Error'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/errors.Error'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/errors.Error'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/errors.Error'
+      security:
+      - BearerAuth: []
+      summary: Delete Chat Notifications
+      tags:
+      - chat
+  /v1/delete-message/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: This API for deleting a message in chat
+      parameters:
+      - description: Message ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/entity.ResponseWithStatus'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/errors.Error'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/errors.Error'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/errors.Error'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/errors.Error'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/errors.Error'
+      security:
+      - BearerAuth: []
+      summary: Delete Message
+      tags:
+      - chat
   /v1/download:
     get:
       consumes:
@@ -1306,6 +1520,49 @@ paths:
       summary: List Folder
       tags:
       - folder-storage
+  /v1/get-notifications:
+    get:
+      consumes:
+      - application/json
+      description: This API for getting all chats notifications for one user
+      parameters:
+      - description: User ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/entity.NotificationsResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/errors.Error'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/errors.Error'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/errors.Error'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/errors.Error'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/errors.Error'
+      security:
+      - BearerAuth: []
+      summary: Get All Notifications
+      tags:
+      - chat
   /v1/group:
     patch:
       consumes:
@@ -2178,6 +2435,46 @@ paths:
       summary: List Post
       tags:
       - post
+  /v1/send-message:
+    post:
+      consumes:
+      - application/json
+      description: This API for sending a message to chat
+      parameters:
+      - description: Send Message Model
+        in: body
+        name: send
+        required: true
+        schema:
+          $ref: '#/definitions/entity.SendMessageRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/entity.ResponseWithStatus'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/errors.Error'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/errors.Error'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/errors.Error'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/errors.Error'
+      security:
+      - BearerAuth: []
+      summary: Send Message
+      tags:
+      - chat
   /v1/site/menu/list:
     get:
       consumes:
@@ -2206,6 +2503,50 @@ paths:
       summary: Get Site Menu
       tags:
       - menu
+  /v1/update-message:
+    put:
+      consumes:
+      - application/json
+      description: This API for updating a message in chat
+      parameters:
+      - description: Update Message Model
+        in: body
+        name: send
+        required: true
+        schema:
+          $ref: '#/definitions/entity.UpdateMessageRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/entity.ResponseWithStatus'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/errors.Error'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/errors.Error'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/errors.Error'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/errors.Error'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/errors.Error'
+      security:
+      - BearerAuth: []
+      summary: Update Message
+      tags:
+      - chat
   /v1/upload:
     post:
       consumes:

@@ -4,8 +4,8 @@ import (
 	"archv1/internal/entity"
 	"archv1/internal/pkg/config"
 	"archv1/internal/pkg/errors"
+	"archv1/internal/pkg/repo/cache"
 	"archv1/internal/pkg/repo/postgres"
-	"archv1/internal/pkg/repo/redis"
 	"archv1/internal/pkg/utils"
 	"archv1/internal/usecase/menu"
 	"archv1/internal/usecase/post"
@@ -23,7 +23,7 @@ import (
 type FileController struct {
 	Conf        *config.Config
 	Postgres    *postgres.DB
-	Redis       *redis.Redis
+	Redis       *cache.Redis
 	Enforcer    *casbin.Enforcer
 	MenuUseCase menu.MenuUseCaseI
 	PostUseCase post.PostUseCaseI

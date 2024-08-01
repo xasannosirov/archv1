@@ -9,17 +9,17 @@ import (
 	"time"
 )
 
-type ChatRepo struct {
+type RepoChat struct {
 	DB *postgres.DB
 }
 
 func NewChatRepo(db *postgres.DB) ChatRepository {
-	return &ChatRepo{
+	return &RepoChat{
 		DB: db,
 	}
 }
 
-func (ch *ChatRepo) UserGroups(ctx context.Context, userID int64) ([]entity.GetGroupResponse, error) {
+func (ch *RepoChat) UserGroups(ctx context.Context, userID int64) ([]entity.GetGroupResponse, error) {
 	query := fmt.Sprintf(`
 	SELECT
 		g.id,
@@ -43,7 +43,12 @@ func (ch *ChatRepo) UserGroups(ctx context.Context, userID int64) ([]entity.GetG
 	if err != nil {
 		return nil, err
 	}
-	defer rows.Close()
+	defer func(rows *sql.Rows) {
+		err := rows.Close()
+		if err != nil {
+			_ = err
+		}
+	}(rows)
 
 	for rows.Next() {
 		var (
@@ -75,7 +80,63 @@ func (ch *ChatRepo) UserGroups(ctx context.Context, userID int64) ([]entity.GetG
 	return response, nil
 }
 
-func (ch *ChatRepo) GetGroup(ctx context.Context, groupID int64) (entity.GetGroupResponse, error) {
+func (ch *RepoChat) GroupUsers(ctx context.Context, groupID int64) ([]entity.GetUserResponse, error) {
+	query := fmt.Sprintf(`
+	SELECT
+		u.id,
+		u.username,
+		u.role,
+		u.status
+	FROM
+	    group_users AS gu
+	INNER JOIN
+		groups AS g ON g.id = gu.group_id
+	INNER JOIN 
+	    users u ON u.id = gu.user_id
+	WHERE
+	    g.deleted_at IS NULL AND gu.deleted_at IS NULL AND u.deleted_at IS NULL
+	AND gu.group_id = '%d' AND u.status = TRUE
+	`, groupID)
+
+	var response []entity.GetUserResponse
+
+	rows, err := ch.DB.QueryContext(ctx, query)
+	if err != nil {
+		return nil, err
+	}
+	defer func(rows *sql.Rows) {
+		err := rows.Close()
+		if err != nil {
+			_ = err
+		}
+	}(rows)
+
+	for rows.Next() {
+		var (
+			user entity.GetUserResponse
+		)
+		err := rows.Scan(
+			&user.Id,
+			&user.Username,
+			&user.Role,
+			&user.Status,
+		)
+
+		if err != nil {
+			return nil, err
+		}
+
+		response = append(response, user)
+	}
+
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+
+	return response, nil
+}
+
+func (ch *RepoChat) GetGroup(ctx context.Context, groupID int64) (entity.GetGroupResponse, error) {
 	query := fmt.Sprintf(`
 	SELECT
 		id,
@@ -109,7 +170,7 @@ func (ch *ChatRepo) GetGroup(ctx context.Context, groupID int64) (entity.GetGrou
 	return result, nil
 }
 
-func (ch *ChatRepo) CreateGroup(ctx context.Context, group entity.CreateGroupRequest) (entity.CreateGroupResponse, error) {
+func (ch *RepoChat) CreateGroup(ctx context.Context, group entity.CreateGroupRequest) (entity.CreateGroupResponse, error) {
 	var (
 		nullDescription sql.NullString
 		response        entity.CreateGroupResponse
@@ -137,7 +198,7 @@ func (ch *ChatRepo) CreateGroup(ctx context.Context, group entity.CreateGroupReq
 	return response, nil
 }
 
-func (ch *ChatRepo) UpdateGroup(ctx context.Context, group entity.UpdateGroupRequest) (entity.UpdateGroupResponse, error) {
+func (ch *RepoChat) UpdateGroup(ctx context.Context, group entity.UpdateGroupRequest) (entity.UpdateGroupResponse, error) {
 	var (
 		nullDescription sql.NullString
 		response        entity.UpdateGroupResponse
@@ -164,7 +225,7 @@ func (ch *ChatRepo) UpdateGroup(ctx context.Context, group entity.UpdateGroupReq
 	return response, nil
 }
 
-func (ch *ChatRepo) UpdateGroupColumns(ctx context.Context, fields entity.UpdateGroupColumns) (entity.UpdateGroupResponse, error) {
+func (ch *RepoChat) UpdateGroupColumns(ctx context.Context, fields entity.UpdateGroupColumns) (entity.UpdateGroupResponse, error) {
 	var (
 		nullDescription sql.NullString
 		response        entity.UpdateGroupResponse
@@ -199,7 +260,7 @@ func (ch *ChatRepo) UpdateGroupColumns(ctx context.Context, fields entity.Update
 	return response, nil
 }
 
-func (ch *ChatRepo) DeleteGroup(ctx context.Context, groupID, deletedBy int64) (entity.DeleteGroupResponse, error) {
+func (ch *RepoChat) DeleteGroup(ctx context.Context, groupID, deletedBy int64) (entity.DeleteGroupResponse, error) {
 	res, err := ch.DB.NewUpdate().Table("groups").
 		Set("deleted_at = ?", time.Now()).
 		Set("deleted_by = ?", deletedBy).
@@ -225,7 +286,7 @@ func (ch *ChatRepo) DeleteGroup(ctx context.Context, groupID, deletedBy int64) (
 	}, nil
 }
 
-func (ch *ChatRepo) AddUserToGroup(ctx context.Context, userID, groupID int64) error {
+func (ch *RepoChat) AddUserToGroup(ctx context.Context, userID, groupID int64) error {
 	checkQuery := fmt.Sprintf(`SELECT COUNT(*) FROM group_users WHERE group_id = '%d' AND user_id = '%d'`, groupID, userID)
 
 	var count int
@@ -271,7 +332,7 @@ func (ch *ChatRepo) AddUserToGroup(ctx context.Context, userID, groupID int64) e
 
 }
 
-func (ch *ChatRepo) RemoveUserFromGroup(ctx context.Context, userID, groupID int64) error {
+func (ch *RepoChat) RemoveUserFromGroup(ctx context.Context, userID, groupID int64) error {
 	query := fmt.Sprintf(`UPDATE group_users  SET deleted_at = NOW() WHERE group_id = '%d' AND user_id = '%d' AND deleted_at IS NULL`, groupID, userID)
 
 	result, err := ch.DB.ExecContext(ctx, query)
@@ -291,13 +352,13 @@ func (ch *ChatRepo) RemoveUserFromGroup(ctx context.Context, userID, groupID int
 	return nil
 }
 
-func (ch *ChatRepo) CreateChat(ctx context.Context, creator int64, chatType string) (entity.CreatedChatResponse, error) {
-	query := `INSERT INTO chat (creator, type) VALUES ($1, $2) RETURNING id, creator, type`
+func (ch *RepoChat) CreateChat(ctx context.Context, receiverID int64, chatType string) (entity.CreatedChatResponse, error) {
+	query := fmt.Sprintf(`INSERT INTO chat (receiver_id, chat_type) VALUES ('%d', '%s') RETURNING id, receiver_id, chat_type`, receiverID, chatType)
 
 	var response entity.CreatedChatResponse
 	err := ch.DB.QueryRowContext(ctx, query).Scan(
 		&response.ChatId,
-		&response.Creator,
+		&response.ReceiverID,
 		&response.ChatType,
 	)
 	if err != nil {
@@ -307,7 +368,7 @@ func (ch *ChatRepo) CreateChat(ctx context.Context, creator int64, chatType stri
 	return response, nil
 }
 
-func (ch *ChatRepo) DeleteChat(ctx context.Context, chatID int64) error {
+func (ch *RepoChat) DeleteChat(ctx context.Context, chatID int64) error {
 	query := `UPDATE chat SET deleted_at = NOW() WHERE id = $1`
 
 	result, err := ch.DB.ExecContext(ctx, query, chatID)
@@ -327,8 +388,8 @@ func (ch *ChatRepo) DeleteChat(ctx context.Context, chatID int64) error {
 	return nil
 }
 
-func (ch *ChatRepo) UserChats(ctx context.Context, userID int64) (entity.UserChatsResponse, error) {
-	query := `SELECT id, type, creator FROM chat WHERE creator = $1 AND deleted_at IS NULL`
+func (ch *RepoChat) UserChats(ctx context.Context, userID int64) (entity.UserChatsResponse, error) {
+	query := `SELECT id, chat_type, receiver_id FROM chat WHERE receiver_id = $1 AND deleted_at IS NULL`
 
 	var response entity.UserChatsResponse
 
@@ -336,19 +397,24 @@ func (ch *ChatRepo) UserChats(ctx context.Context, userID int64) (entity.UserCha
 	if err != nil {
 		return entity.UserChatsResponse{}, err
 	}
-	defer rows.Close()
+	defer func(rows *sql.Rows) {
+		err := rows.Close()
+		if err != nil {
+			_ = err
+		}
+	}(rows)
 
 	for rows.Next() {
 		var chat struct {
-			ChatID   int    `json:"chat_id"`
-			ChatType string `json:"chat_type"`
-			Creator  int    `json:"creator"`
+			ChatID     int    `json:"chat_id"`
+			ChatType   string `json:"chat_type"`
+			ReceiverID int    `json:"receiver_id"`
 		}
 
 		err = rows.Scan(
 			&chat.ChatID,
 			&chat.ChatType,
-			&chat.Creator,
+			&chat.ReceiverID,
 		)
 		if err != nil {
 			return entity.UserChatsResponse{}, err
@@ -359,6 +425,124 @@ func (ch *ChatRepo) UserChats(ctx context.Context, userID int64) (entity.UserCha
 
 	if err := rows.Err(); err != nil {
 		return entity.UserChatsResponse{}, err
+	}
+
+	return response, nil
+}
+
+func (ch *RepoChat) SendMessage(ctx context.Context, message entity.SendMessageRequest) error {
+	query := fmt.Sprintf(`
+	INSERT INTO messages (chat_id, content, message_type, sender) VALUES ('%d', '%s', '%s', '%d')`,
+		message.Property.ChatID,
+		message.Property.Message,
+		message.Property.MessageType,
+		message.Property.Sender,
+	)
+
+	result, err := ch.DB.ExecContext(ctx, query)
+	if err != nil {
+		return err
+	}
+
+	rows, err := result.RowsAffected()
+	if err != nil {
+		return err
+	}
+
+	if rows == 0 {
+		return sql.ErrNoRows
+	}
+
+	return nil
+}
+
+func (ch *RepoChat) UpdateMessage(ctx context.Context, message entity.UpdateMessageRequest) error {
+	query := fmt.Sprintf(`
+	UPDATE messages SET  chat_id = '%d', content = '%s' WHERE id = '%d' AND deleted_at IS NULL`,
+		message.Property.ChatID,
+		message.Property.NewMessage,
+		message.Property.MessageID,
+	)
+
+	result, err := ch.DB.ExecContext(ctx, query)
+	if err != nil {
+		return err
+	}
+
+	rows, err := result.RowsAffected()
+	if err != nil {
+		return err
+	}
+
+	if rows == 0 {
+		return sql.ErrNoRows
+	}
+
+	return nil
+}
+
+func (ch *RepoChat) DeleteMessage(ctx context.Context, messageID int64) error {
+	query := fmt.Sprintf(`UPDATE messages SET  deleted_at = NOW() WHERE id = '%d' AND deleted_at IS NULL`, messageID)
+
+	result, err := ch.DB.ExecContext(ctx, query)
+	if err != nil {
+		return err
+	}
+
+	rows, err := result.RowsAffected()
+	if err != nil {
+		return err
+	}
+
+	if rows == 0 {
+		return sql.ErrNoRows
+	}
+
+	return nil
+}
+
+func (ch *RepoChat) GetChatMessages(ctx context.Context, chatID int64) (entity.ChatMessagesResponse, error) {
+	query := fmt.Sprintf(
+		`SELECT id, chat_id, content, sender, message_type FROM messages WHERE chat_id = '%d' AND deleted_at IS NULL;`,
+		chatID)
+
+	rows, err := ch.DB.QueryContext(ctx, query)
+	if err != nil {
+		return entity.ChatMessagesResponse{}, err
+	}
+	defer func(rows *sql.Rows) {
+		err := rows.Close()
+		if err != nil {
+			_ = err
+		}
+	}(rows)
+
+	var response entity.ChatMessagesResponse
+	for rows.Next() {
+		var message struct {
+			MessageID   int    `json:"message_id"`
+			ChatID      int    `json:"chat_id"`
+			Sender      int    `json:"sender"`
+			Message     string `json:"content"`
+			MessageType string `json:"message_type"`
+		}
+
+		err = rows.Scan(
+			&message.MessageID,
+			&message.ChatID,
+			&message.Message,
+			&message.Sender,
+			&message.MessageType,
+		)
+		if err != nil {
+			return entity.ChatMessagesResponse{}, err
+		}
+
+		response.Messages = append(response.Messages, message)
+	}
+
+	if err := rows.Err(); err != nil {
+		return entity.ChatMessagesResponse{}, err
 	}
 
 	return response, nil

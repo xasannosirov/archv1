@@ -4,36 +4,41 @@ import (
 	"archv1/internal/entity"
 	"archv1/internal/pkg/config"
 	"archv1/internal/pkg/errors"
+	"archv1/internal/pkg/repo/cache"
 	"archv1/internal/pkg/repo/postgres"
-	"archv1/internal/pkg/repo/redis"
 	"archv1/internal/pkg/utils"
 	"archv1/internal/usecase/chat"
+	"archv1/internal/usecase/user"
 	"archv1/internal/websocket"
 	"context"
+	"encoding/json"
 	"github.com/casbin/casbin/v2"
 	"github.com/gin-gonic/gin"
 	"github.com/spf13/cast"
 	"net/http"
 	"strconv"
+	"strings"
 )
 
 type ChatController struct {
+	RedisCache   *cache.Redis
 	Conf         *config.Config
 	Hub          *websocket.Hub
 	Postgres     *postgres.DB
-	Redis        *redis.Redis
 	Enforcer     *casbin.Enforcer
 	ChatUseCaseI chat.ChatUseCaseI
+	UserUseCase  user.UserUseCaseI
 }
 
 func NewChatController(ch *ChatController) *ChatController {
 	return &ChatController{
+		RedisCache:   ch.RedisCache,
 		Conf:         ch.Conf,
 		Hub:          ch.Hub,
 		Postgres:     ch.Postgres,
-		Redis:        ch.Redis,
 		Enforcer:     ch.Enforcer,
 		ChatUseCaseI: ch.ChatUseCaseI,
+		UserUseCase:  ch.UserUseCase,
 	}
 }
 
@@ -398,12 +403,325 @@ func (ch *ChatController) DeleteChat(c *gin.Context) {
 	})
 }
 
-func (ch *ChatController) SendMessage(c *gin.Context) {}
+// SendMessage
+// @Security		BearerAuth
+// @Summary 		Send Message
+// @Description 	This API for sending a message to chat
+// @Tags 			chat
+// @Accept 			json
+// @Produce 		json
+// @Param 			send body entity.SendMessageRequest true "Send Message Model"
+// @Success 		200 {object} entity.ResponseWithStatus
+// @Failure 		400 {object} errors.Error
+// @Failure 		401 {object} errors.Error
+// @Failure 		403 {object} errors.Error
+// @Failure 		500 {object} errors.Error
+// @Router 			/v1/send-message [POST]
+func (ch *ChatController) SendMessage(c *gin.Context) {
+	var message entity.SendMessageRequest
 
+	if err := c.ShouldBindJSON(&message); err != nil {
+		errors.ErrorResponse(c, http.StatusBadRequest, err.Error())
+		return
+	}
+
+	message.Property.ChatType = strings.ToLower(message.Property.ChatType)
+	if message.Property.ChatType != "private" && message.Property.ChatType != "group" {
+		errors.ErrorResponse(c, http.StatusBadRequest, "property chat type must be 'private' or 'group'")
+		return
+	}
+
+	if message.Property.ChatID == 0 {
+		newChat, err := ch.ChatUseCaseI.CreateChat(
+			context.Background(),
+			int64(message.Property.Sender),
+			message.Property.ChatType,
+		)
+
+		if err != nil {
+			errors.ErrorResponse(c, http.StatusInternalServerError, err.Error())
+			return
+		}
+
+		message.Property.ChatID = newChat.ChatId
+	}
+
+	if err := ch.ChatUseCaseI.SendMessage(context.Background(), message); err != nil {
+		errors.ErrorResponse(c, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	if message.Property.ChatType == "private" {
+		userResponse, err := ch.UserUseCase.GetByID(context.Background(), message.Property.Receiver)
+		if err != nil {
+			errors.ErrorResponse(c, http.StatusInternalServerError, err.Error())
+			return
+		}
+
+		var cacheData entity.NotificationsResponse
+
+		cacheNotification, err := ch.RedisCache.Get(context.Background(), userResponse.Username)
+		if err != nil {
+			cacheData = entity.NotificationsResponse{}
+		} else {
+			err = json.Unmarshal([]byte(cacheNotification), &cacheData)
+			if err != nil {
+				errors.ErrorResponse(c, http.StatusInternalServerError, err.Error())
+				return
+			}
+		}
+
+		var isUpdate = false
+		for _, notification := range cacheData.Notifications {
+			if notification.ChatID == message.Property.ChatID {
+				notification.LatestMessage = message.Property.Message
+				notification.LatestSender = message.Property.Sender
+				notification.TotalMessagesCount = notification.TotalMessagesCount + 1
+				isUpdate = true
+				break
+			}
+		}
+
+		if isUpdate == false {
+			cacheData.Notifications = append(cacheData.Notifications, struct {
+				ChatID             int    `json:"chat_id"`
+				ChatType           string `json:"chat_type"`
+				LatestSender       int    `json:"latest_sender"`
+				LatestMessage      string `json:"latest_message"`
+				TotalMessagesCount int    `json:"total_messages_count"`
+			}{
+				ChatID:             message.Property.ChatID,
+				ChatType:           message.Property.ChatType,
+				LatestSender:       message.Property.Sender,
+				LatestMessage:      message.Property.Message,
+				TotalMessagesCount: 1,
+			})
+		}
+
+		sendingData, err := json.Marshal(&entity.SendMessageRequest{
+			Action: "new_message",
+			Property: struct {
+				ChatID      int    `json:"chat_id"`
+				ChatType    string `json:"chat_type"`
+				Message     string `json:"message"`
+				MessageType string `json:"message_type"`
+				Sender      int    `json:"sender"`
+				Receiver    int    `json:"receiver"`
+			}{
+				ChatID:      message.Property.ChatID,
+				ChatType:    message.Property.ChatType,
+				Message:     message.Property.Message,
+				MessageType: message.Property.MessageType,
+				Sender:      message.Property.Sender,
+				Receiver:    message.Property.Receiver,
+			},
+		})
+		if err != nil {
+			errors.ErrorResponse(c, http.StatusInternalServerError, err.Error())
+			return
+		}
+
+		isSend := false
+		for connection := range ch.Hub.Connections {
+			if connection.Username == userResponse.Username {
+				connection.Send <- sendingData
+				isSend = true
+				break
+			}
+		}
+
+		if isSend == false {
+			err := ch.RedisCache.Set(context.Background(), userResponse.Username, cacheData, 0)
+			if err != nil {
+				errors.ErrorResponse(c, http.StatusInternalServerError, err.Error())
+				return
+			}
+		}
+	} else {
+		groupResponse, err := ch.ChatUseCaseI.GetGroup(context.Background(), int64(message.Property.Receiver))
+		if err != nil {
+			errors.ErrorResponse(c, http.StatusInternalServerError, err.Error())
+			return
+		}
+
+		groupUsers, err := ch.ChatUseCaseI.GroupUsers(context.Background(), int64(groupResponse.GroupId))
+		if err != nil {
+			errors.ErrorResponse(c, http.StatusInternalServerError, err.Error())
+			return
+		}
+
+		for _, gettingUser := range groupUsers {
+			var cacheData entity.NotificationsResponse
+
+			cacheNotification, err := ch.RedisCache.Get(context.Background(), gettingUser.Username)
+			if err != nil {
+				cacheData = entity.NotificationsResponse{}
+			} else {
+				err = json.Unmarshal([]byte(cacheNotification), &cacheData)
+				if err != nil {
+					errors.ErrorResponse(c, http.StatusInternalServerError, err.Error())
+					return
+				}
+			}
+
+			var isUpdate = false
+			for _, notification := range cacheData.Notifications {
+				if notification.ChatID == message.Property.ChatID {
+					notification.LatestMessage = message.Property.Message
+					notification.LatestSender = message.Property.Sender
+					notification.TotalMessagesCount = notification.TotalMessagesCount + 1
+					isUpdate = true
+					break
+				}
+			}
+
+			if isUpdate == false {
+				cacheData.Notifications = append(cacheData.Notifications, struct {
+					ChatID             int    `json:"chat_id"`
+					ChatType           string `json:"chat_type"`
+					LatestSender       int    `json:"latest_sender"`
+					LatestMessage      string `json:"latest_message"`
+					TotalMessagesCount int    `json:"total_messages_count"`
+				}{
+					ChatID:             message.Property.ChatID,
+					ChatType:           message.Property.ChatType,
+					LatestSender:       message.Property.Sender,
+					LatestMessage:      message.Property.Message,
+					TotalMessagesCount: 1,
+				})
+			}
+
+			sendingData, err := json.Marshal(&entity.SendMessageRequest{
+				Action: "new_message",
+				Property: struct {
+					ChatID      int    `json:"chat_id"`
+					ChatType    string `json:"chat_type"`
+					Message     string `json:"message"`
+					MessageType string `json:"message_type"`
+					Sender      int    `json:"sender"`
+					Receiver    int    `json:"receiver"`
+				}{
+					ChatID:      message.Property.ChatID,
+					ChatType:    message.Property.ChatType,
+					Message:     message.Property.Message,
+					MessageType: message.Property.MessageType,
+					Sender:      message.Property.Sender,
+					Receiver:    message.Property.Receiver,
+				},
+			})
+			if err != nil {
+				errors.ErrorResponse(c, http.StatusInternalServerError, err.Error())
+				return
+			}
+
+			isSend := false
+			for connection := range ch.Hub.Connections {
+				if gettingUser.Username == connection.Username {
+					connection.Send <- sendingData
+					isSend = true
+					break
+				}
+			}
+
+			if isSend == false {
+				err := ch.RedisCache.Set(context.Background(), gettingUser.Username, cacheData, 0)
+				if err != nil {
+					errors.ErrorResponse(c, http.StatusInternalServerError, err.Error())
+					return
+				}
+			}
+		}
+	}
+
+	c.JSON(http.StatusOK, entity.ResponseWithStatus{
+		Status: true,
+	})
+}
+
+// UpdateMessage
+// @Security		BearerAuth
+// @Summary 		Update Message
+// @Description 	This API for updating a message in chat
+// @Tags 			chat
+// @Accept 			json
+// @Produce 		json
+// @Param 			send body entity.UpdateMessageRequest true "Update Message Model"
+// @Success 		200 {object} entity.ResponseWithStatus
+// @Failure 		400 {object} errors.Error
+// @Failure 		401 {object} errors.Error
+// @Failure 		403 {object} errors.Error
+// @Failure 		404 {object} errors.Error
+// @Failure 		500 {object} errors.Error
+// @Router 			/v1/update-message [PUT]
 func (ch *ChatController) UpdateMessage(c *gin.Context) {}
 
+// DeleteMessage
+// @Security		BearerAuth
+// @Summary 		Delete Message
+// @Description 	This API for deleting a message in chat
+// @Tags 			chat
+// @Accept 			json
+// @Produce 		json
+// @Param 			id path int true "Message ID"
+// @Success 		200 {object} entity.ResponseWithStatus
+// @Failure 		400 {object} errors.Error
+// @Failure 		401 {object} errors.Error
+// @Failure 		403 {object} errors.Error
+// @Failure 		404 {object} errors.Error
+// @Failure 		500 {object} errors.Error
+// @Router 			/v1/delete-message/{id} [DELETE]
 func (ch *ChatController) DeleteMessage(c *gin.Context) {}
 
+// GetChatMessages
+// @Security		BearerAuth
+// @Summary 		Get Chat Messages
+// @Description 	This API for getting chat messages with chat_id
+// @Tags 			chat
+// @Accept 			json
+// @Produce 		json
+// @Param 			id query int true "Chat ID"
+// @Param 			type query string true "Chat Type"
+// @Success 		200 {object} entity.ChatMessagesResponse
+// @Failure 		400 {object} errors.Error
+// @Failure 		401 {object} errors.Error
+// @Failure 		403 {object} errors.Error
+// @Failure 		404 {object} errors.Error
+// @Failure 		500 {object} errors.Error
+// @Router 			/v1/chat-messages [GET]
 func (ch *ChatController) GetChatMessages(c *gin.Context) {}
 
-func (ch *ChatController) GetNotifications(c *gin.Context) {}
+// GetAllNotifications
+// @Security		BearerAuth
+// @Summary 		Get All Notifications
+// @Description 	This API for getting all chats notifications for one user
+// @Tags 			chat
+// @Accept 			json
+// @Produce 		json
+// @Param 			id path int true "User ID"
+// @Success 		200 {object} entity.NotificationsResponse
+// @Failure 		400 {object} errors.Error
+// @Failure 		401 {object} errors.Error
+// @Failure 		403 {object} errors.Error
+// @Failure 		404 {object} errors.Error
+// @Failure 		500 {object} errors.Error
+// @Router 			/v1/get-notifications [GET]
+func (ch *ChatController) GetAllNotifications(c *gin.Context) {}
+
+// DeleteChatNotifications
+// @Security		BearerAuth
+// @Summary 		Delete Chat Notifications
+// @Description 	This API for deleting chats notifications for one user
+// @Tags 			chat
+// @Accept 			json
+// @Produce 		json
+// @Param 			id query int true "Chat ID"
+// @Param 			type query string true "Chat Type"
+// @Param 			count query int true "Read Message Count"
+// @Success 		200 {object} entity.ResponseWithStatus
+// @Failure 		400 {object} errors.Error
+// @Failure 		401 {object} errors.Error
+// @Failure 		403 {object} errors.Error
+// @Failure 		404 {object} errors.Error
+// @Failure 		500 {object} errors.Error
+// @Router 			/v1/delete-chat-notifications [DELETE]
+func (ch *ChatController) DeleteChatNotifications(c *gin.Context) {}

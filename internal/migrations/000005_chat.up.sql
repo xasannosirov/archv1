@@ -33,15 +33,14 @@ CREATE TABLE IF NOT EXISTS group_users (
 
 CREATE TABLE IF NOT EXISTS chat (
     id SERIAL PRIMARY KEY,
-    type VARCHAR NOT NULL,
-    creator INT NOT NULL,
+    chat_type VARCHAR NOT NULL,
+    receiver_id INT NOT NULL,
     created_at TIMESTAMP NOT NULL DEFAULT NOW(),
     created_by INT,
     updated_at TIMESTAMP,
     updated_by INT,
     deleted_at TIMESTAMP,
     deleted_by INT,
-    FOREIGN KEY (creator) REFERENCES users(id),
     FOREIGN KEY (created_by) REFERENCES users(id),
     FOREIGN KEY (updated_by) REFERENCES users(id),
     FOREIGN KEY (deleted_by) REFERENCES users(id)
@@ -50,9 +49,8 @@ CREATE TABLE IF NOT EXISTS chat (
 CREATE TABLE IF NOT EXISTS messages (
     id SERIAL PRIMARY KEY,
     chat_id INT NOT NULL,
-    chat_type VARCHAR NOT NULL, -- private, group
     content TEXT NOT NULL,
-    type VARCHAR NOT NULL, -- message, file
+    message_type VARCHAR NOT NULL,
     sender INT NOT NULL,
     created_at TIMESTAMP NOT NULL DEFAULT NOW(),
     created_by INT,

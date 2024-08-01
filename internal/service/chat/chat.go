@@ -20,6 +20,10 @@ func (ch *ChatService) UserGroups(ctx context.Context, userID int64) ([]entity.G
 	return ch.chatRepo.UserGroups(ctx, userID)
 }
 
+func (ch *ChatService) GroupUsers(ctx context.Context, groupID int64) ([]entity.GetUserResponse, error) {
+	return ch.chatRepo.GroupUsers(ctx, groupID)
+}
+
 func (ch *ChatService) GetGroup(ctx context.Context, groupID int64) (entity.GetGroupResponse, error) {
 	return ch.chatRepo.GetGroup(ctx, groupID)
 }
@@ -58,4 +62,20 @@ func (ch *ChatService) DeleteChat(ctx context.Context, chatID int64) error {
 
 func (ch *ChatService) UserChats(ctx context.Context, userID int64) (entity.UserChatsResponse, error) {
 	return ch.chatRepo.UserChats(ctx, userID)
+}
+
+func (ch *ChatService) SendMessage(ctx context.Context, message entity.SendMessageRequest) error {
+	return ch.chatRepo.SendMessage(ctx, message)
+}
+
+func (ch *ChatService) UpdateMessage(ctx context.Context, message entity.UpdateMessageRequest) error {
+	return ch.chatRepo.UpdateMessage(ctx, message)
+}
+
+func (ch *ChatService) DeleteMessage(ctx context.Context, messageID int64) error {
+	return ch.chatRepo.DeleteMessage(ctx, messageID)
+}
+
+func (ch *ChatService) GetChatMessages(ctx context.Context, chatID int64) (entity.ChatMessagesResponse, error) {
+	return ch.chatRepo.GetChatMessages(ctx, chatID)
 }

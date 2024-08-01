@@ -7,6 +7,7 @@ import (
 
 type ChatRepository interface {
 	UserGroups(ctx context.Context, userID int64) ([]entity.GetGroupResponse, error)
+	GroupUsers(ctx context.Context, groupID int64) ([]entity.GetUserResponse, error)
 	GetGroup(ctx context.Context, groupID int64) (entity.GetGroupResponse, error)
 	CreateGroup(ctx context.Context, group entity.CreateGroupRequest) (entity.CreateGroupResponse, error)
 	UpdateGroup(ctx context.Context, group entity.UpdateGroupRequest) (entity.UpdateGroupResponse, error)
@@ -17,4 +18,8 @@ type ChatRepository interface {
 	CreateChat(ctx context.Context, creator int64, chatType string) (entity.CreatedChatResponse, error)
 	DeleteChat(ctx context.Context, chatID int64) error
 	UserChats(ctx context.Context, userID int64) (entity.UserChatsResponse, error)
+	SendMessage(ctx context.Context, message entity.SendMessageRequest) error
+	UpdateMessage(ctx context.Context, message entity.UpdateMessageRequest) error
+	DeleteMessage(ctx context.Context, messageID int64) error
+	GetChatMessages(ctx context.Context, chatID int64) (entity.ChatMessagesResponse, error)
 }

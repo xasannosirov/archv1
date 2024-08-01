@@ -11,8 +11,8 @@ import (
 	_ "archv1/internal/docs"
 	"archv1/internal/pkg/config"
 	"archv1/internal/pkg/middleware"
+	"archv1/internal/pkg/repo/cache"
 	"archv1/internal/pkg/repo/postgres"
-	"archv1/internal/pkg/repo/redis"
 	"archv1/internal/pkg/tokens"
 	authRepo "archv1/internal/repository/postgres/auth"
 	chatRepo "archv1/internal/repository/postgres/chat"
@@ -36,7 +36,6 @@ import (
 	"github.com/casbin/casbin/v2"
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
-
 	swaggerFiles "github.com/swaggo/files"
 	ginSwagger "github.com/swaggo/gin-swagger"
 )
@@ -45,7 +44,7 @@ type Router struct {
 	Conf       *config.Config
 	Hub        *websocket.Hub
 	PostgresDB *postgres.DB
-	RedisCache *redis.Redis
+	RedisCache *cache.Redis
 	Enforcer   *casbin.Enforcer
 }
 
@@ -145,15 +144,16 @@ func New(option *Router) *gin.Engine {
 	})
 
 	chatController := chatCont.NewChatController(&chatCont.ChatController{
+		RedisCache:   option.RedisCache,
 		Conf:         option.Conf,
 		Hub:          option.Hub,
 		Postgres:     option.PostgresDB,
-		Redis:        option.RedisCache,
 		Enforcer:     option.Enforcer,
 		ChatUseCaseI: chatUseCaseI,
+		UserUseCase:  userUseCaseI,
 	})
 
-	router.GET("/ws/:username", func(c *gin.Context) {
+	router.GET("/ws", func(c *gin.Context) {
 		websocket.HandleConnection(option.Hub, c.Writer, c.Request)
 	})
 
@@ -176,6 +176,12 @@ func New(option *Router) *gin.Engine {
 	apiV1.DELETE("/group/remove-user", chatController.RemoveUserFromGroup)
 	apiV1.GET("/group/user-chats", chatController.UserChats)
 	apiV1.DELETE("/group/delete-chat", chatController.DeleteChat)
+	apiV1.POST("/send-message", chatController.SendMessage)
+	apiV1.PUT("/update-message", chatController.UpdateMessage)
+	apiV1.DELETE("/delete-message/:id", chatController.DeleteMessage)
+	apiV1.GET("/chat-messages", chatController.GetChatMessages)
+	apiV1.GET("/get-notifications", chatController.GetAllNotifications)
+	apiV1.DELETE("/delete-chat-notifications", chatController.DeleteChatNotifications)
 
 	// User APIs
 	apiV1.GET("/user/list", userController.List)

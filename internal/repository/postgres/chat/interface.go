@@ -15,7 +15,7 @@ type ChatRepository interface {
 	DeleteGroup(ctx context.Context, groupID, deletedBy int64) (entity.DeleteGroupResponse, error)
 	AddUserToGroup(ctx context.Context, userID, groupID int64) error
 	RemoveUserFromGroup(ctx context.Context, userID, groupID int64) error
-	CreateChat(ctx context.Context, receiverID int64, chatType string) (entity.CreatedChatResponse, error)
+	CreateChat(ctx context.Context, receiverID, creator int64, chatType string) (entity.CreatedChatResponse, error)
 	DeleteChat(ctx context.Context, chatID int64) error
 	UserChats(ctx context.Context, userID int64) (entity.UserChatsResponse, error)
 	SendMessage(ctx context.Context, message entity.SendMessageRequest) error

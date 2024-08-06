@@ -352,7 +352,27 @@ func (ch *RepoChat) RemoveUserFromGroup(ctx context.Context, userID, groupID int
 	return nil
 }
 
-func (ch *RepoChat) CreateChat(ctx context.Context, receiverID int64, chatType string) (entity.CreatedChatResponse, error) {
+func (ch *RepoChat) addAdmin(ctx context.Context, adminID, groupID int64) error {
+	query := fmt.Sprintf(`INSERT INTO group_users (group_id, user_id) VALUES ('%d', '%d')`, groupID, adminID)
+
+	result, err := ch.DB.ExecContext(ctx, query)
+	if err != nil {
+		return err
+	}
+
+	rows, err := result.RowsAffected()
+	if err != nil {
+		return err
+	}
+
+	if rows == 0 {
+		return sql.ErrNoRows
+	}
+
+	return nil
+}
+
+func (ch *RepoChat) CreateChat(ctx context.Context, receiverID, creator int64, chatType string) (entity.CreatedChatResponse, error) {
 	query := fmt.Sprintf(`INSERT INTO chat (receiver_id, chat_type) VALUES ('%d', '%s') RETURNING id, receiver_id, chat_type`, receiverID, chatType)
 
 	var response entity.CreatedChatResponse
@@ -363,6 +383,13 @@ func (ch *RepoChat) CreateChat(ctx context.Context, receiverID int64, chatType s
 	)
 	if err != nil {
 		return entity.CreatedChatResponse{}, err
+	}
+
+	if chatType == "group" {
+		err := ch.addAdmin(ctx, creator, int64(response.ChatId))
+		if err != nil {
+			return entity.CreatedChatResponse{}, err
+		}
 	}
 
 	return response, nil

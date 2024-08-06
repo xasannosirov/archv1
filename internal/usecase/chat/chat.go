@@ -52,8 +52,8 @@ func (ch *ChatUseCase) RemoveUserFromGroup(ctx context.Context, userID, groupID 
 	return ch.chatService.RemoveUserFromGroup(ctx, userID, groupID)
 }
 
-func (ch *ChatUseCase) CreateChat(ctx context.Context, receiverID int64, chatType string) (entity.CreatedChatResponse, error) {
-	return ch.chatService.CreateChat(ctx, receiverID, chatType)
+func (ch *ChatUseCase) CreateChat(ctx context.Context, receiverID, creator int64, chatType string) (entity.CreatedChatResponse, error) {
+	return ch.chatService.CreateChat(ctx, receiverID, creator, chatType)
 }
 
 func (ch *ChatUseCase) DeleteChat(ctx context.Context, chatID int64) error {

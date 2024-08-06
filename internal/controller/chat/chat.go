@@ -435,6 +435,7 @@ func (ch *ChatController) SendMessage(c *gin.Context) {
 		newChat, err := ch.ChatUseCaseI.CreateChat(
 			context.Background(),
 			int64(message.Receiver),
+			int64(message.Sender),
 			message.ChatType,
 		)
 

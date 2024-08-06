@@ -3,7 +3,7 @@ package chat
 import (
 	"archv1/internal/entity"
 	"archv1/internal/pkg/config"
-	"archv1/internal/pkg/errors"
+	handle "archv1/internal/pkg/errors"
 	"archv1/internal/pkg/repo/cache"
 	"archv1/internal/pkg/repo/postgres"
 	"archv1/internal/pkg/utils"
@@ -61,13 +61,13 @@ func (ch *ChatController) UserGroups(c *gin.Context) {
 
 	userID, err := strconv.Atoi(id)
 	if err != nil {
-		errors.ErrorResponse(c, http.StatusBadRequest, err.Error())
+		handle.ErrorResponse(c, http.StatusBadRequest, err.Error())
 		return
 	}
 
 	groups, err := ch.ChatUseCaseI.UserGroups(context.Background(), int64(userID))
 	if err != nil {
-		errors.ErrorResponse(c, http.StatusNotFound, err.Error())
+		handle.ErrorResponse(c, http.StatusNotFound, err.Error())
 		return
 	}
 
@@ -93,13 +93,13 @@ func (ch *ChatController) GetGroup(c *gin.Context) {
 
 	groupID, err := strconv.Atoi(id)
 	if err != nil {
-		errors.ErrorResponse(c, http.StatusBadRequest, err.Error())
+		handle.ErrorResponse(c, http.StatusBadRequest, err.Error())
 		return
 	}
 
 	group, err := ch.ChatUseCaseI.GetGroup(context.Background(), int64(groupID))
 	if err != nil {
-		errors.ErrorResponse(c, http.StatusNotFound, err.Error())
+		handle.ErrorResponse(c, http.StatusNotFound, err.Error())
 		return
 	}
 
@@ -124,13 +124,13 @@ func (ch *ChatController) CreateGroup(c *gin.Context) {
 	var request entity.CreateGroupRequest
 
 	if err := c.ShouldBindJSON(&request); err != nil {
-		errors.ErrorResponse(c, http.StatusBadRequest, err.Error())
+		handle.ErrorResponse(c, http.StatusBadRequest, err.Error())
 		return
 	}
 
 	claims, err := utils.GetTokenClaimsFromHeader(c.Request, ch.Conf)
 	if err != nil {
-		errors.ErrorResponse(c, http.StatusUnauthorized, err.Error())
+		handle.ErrorResponse(c, http.StatusUnauthorized, err.Error())
 		return
 	}
 
@@ -138,7 +138,7 @@ func (ch *ChatController) CreateGroup(c *gin.Context) {
 
 	response, err := ch.ChatUseCaseI.CreateGroup(context.Background(), request)
 	if err != nil {
-		errors.ErrorResponse(c, http.StatusInternalServerError, err.Error())
+		handle.ErrorResponse(c, http.StatusInternalServerError, err.Error())
 		return
 	}
 
@@ -163,13 +163,13 @@ func (ch *ChatController) UpdateGroup(c *gin.Context) {
 	var request entity.UpdateGroupRequest
 
 	if err := c.ShouldBindJSON(&request); err != nil {
-		errors.ErrorResponse(c, http.StatusBadRequest, err.Error())
+		handle.ErrorResponse(c, http.StatusBadRequest, err.Error())
 		return
 	}
 
 	claims, err := utils.GetTokenClaimsFromHeader(c.Request, ch.Conf)
 	if err != nil {
-		errors.ErrorResponse(c, http.StatusUnauthorized, err.Error())
+		handle.ErrorResponse(c, http.StatusUnauthorized, err.Error())
 		return
 	}
 
@@ -177,7 +177,7 @@ func (ch *ChatController) UpdateGroup(c *gin.Context) {
 
 	response, err := ch.ChatUseCaseI.UpdateGroup(context.Background(), request)
 	if err != nil {
-		errors.ErrorResponse(c, http.StatusInternalServerError, err.Error())
+		handle.ErrorResponse(c, http.StatusInternalServerError, err.Error())
 		return
 	}
 
@@ -202,13 +202,13 @@ func (ch *ChatController) UpdateGroupColumns(c *gin.Context) {
 	var request entity.UpdateGroupColumns
 
 	if err := c.ShouldBindJSON(&request); err != nil {
-		errors.ErrorResponse(c, http.StatusBadRequest, err.Error())
+		handle.ErrorResponse(c, http.StatusBadRequest, err.Error())
 		return
 	}
 
 	claims, err := utils.GetTokenClaimsFromHeader(c.Request, ch.Conf)
 	if err != nil {
-		errors.ErrorResponse(c, http.StatusUnauthorized, err.Error())
+		handle.ErrorResponse(c, http.StatusUnauthorized, err.Error())
 		return
 	}
 
@@ -216,7 +216,7 @@ func (ch *ChatController) UpdateGroupColumns(c *gin.Context) {
 
 	response, err := ch.ChatUseCaseI.UpdateGroupColumns(context.Background(), request)
 	if err != nil {
-		errors.ErrorResponse(c, http.StatusInternalServerError, err.Error())
+		handle.ErrorResponse(c, http.StatusInternalServerError, err.Error())
 		return
 	}
 
@@ -242,13 +242,13 @@ func (ch *ChatController) DeleteGroup(c *gin.Context) {
 
 	groupID, err := strconv.Atoi(id)
 	if err != nil {
-		errors.ErrorResponse(c, http.StatusBadRequest, err.Error())
+		handle.ErrorResponse(c, http.StatusBadRequest, err.Error())
 		return
 	}
 
 	claims, err := utils.GetTokenClaimsFromHeader(c.Request, ch.Conf)
 	if err != nil {
-		errors.ErrorResponse(c, http.StatusUnauthorized, err.Error())
+		handle.ErrorResponse(c, http.StatusUnauthorized, err.Error())
 		return
 	}
 
@@ -256,7 +256,7 @@ func (ch *ChatController) DeleteGroup(c *gin.Context) {
 
 	response, err := ch.ChatUseCaseI.DeleteGroup(context.Background(), int64(groupID), int64(deletedBy))
 	if err != nil {
-		errors.ErrorResponse(c, http.StatusInternalServerError, err.Error())
+		handle.ErrorResponse(c, http.StatusInternalServerError, err.Error())
 		return
 	}
 
@@ -281,19 +281,19 @@ func (ch *ChatController) DeleteGroup(c *gin.Context) {
 func (ch *ChatController) AddUserToGroup(c *gin.Context) {
 	userID, err := strconv.Atoi(c.Query("user_id"))
 	if err != nil {
-		errors.ErrorResponse(c, http.StatusBadRequest, err.Error())
+		handle.ErrorResponse(c, http.StatusBadRequest, err.Error())
 		return
 	}
 
 	groupID, err := strconv.Atoi(c.Query("group_id"))
 	if err != nil {
-		errors.ErrorResponse(c, http.StatusBadRequest, err.Error())
+		handle.ErrorResponse(c, http.StatusBadRequest, err.Error())
 		return
 	}
 
 	err = ch.ChatUseCaseI.AddUserToGroup(context.Background(), int64(userID), int64(groupID))
 	if err != nil {
-		errors.ErrorResponse(c, http.StatusInternalServerError, err.Error())
+		handle.ErrorResponse(c, http.StatusInternalServerError, err.Error())
 		return
 	}
 
@@ -320,19 +320,19 @@ func (ch *ChatController) AddUserToGroup(c *gin.Context) {
 func (ch *ChatController) RemoveUserFromGroup(c *gin.Context) {
 	userID, err := strconv.Atoi(c.Query("user_id"))
 	if err != nil {
-		errors.ErrorResponse(c, http.StatusBadRequest, err.Error())
+		handle.ErrorResponse(c, http.StatusBadRequest, err.Error())
 		return
 	}
 
 	groupID, err := strconv.Atoi(c.Query("group_id"))
 	if err != nil {
-		errors.ErrorResponse(c, http.StatusBadRequest, err.Error())
+		handle.ErrorResponse(c, http.StatusBadRequest, err.Error())
 		return
 	}
 
 	err = ch.ChatUseCaseI.RemoveUserFromGroup(context.Background(), int64(userID), int64(groupID))
 	if err != nil {
-		errors.ErrorResponse(c, http.StatusInternalServerError, err.Error())
+		handle.ErrorResponse(c, http.StatusInternalServerError, err.Error())
 		return
 	}
 
@@ -358,13 +358,13 @@ func (ch *ChatController) RemoveUserFromGroup(c *gin.Context) {
 func (ch *ChatController) UserChats(c *gin.Context) {
 	userID, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
-		errors.ErrorResponse(c, http.StatusBadRequest, err.Error())
+		handle.ErrorResponse(c, http.StatusBadRequest, err.Error())
 		return
 	}
 
 	chats, err := ch.ChatUseCaseI.UserChats(context.Background(), int64(userID))
 	if err != nil {
-		errors.ErrorResponse(c, http.StatusNotFound, err.Error())
+		handle.ErrorResponse(c, http.StatusNotFound, err.Error())
 		return
 	}
 
@@ -388,13 +388,13 @@ func (ch *ChatController) UserChats(c *gin.Context) {
 func (ch *ChatController) DeleteChat(c *gin.Context) {
 	chatID, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
-		errors.ErrorResponse(c, http.StatusBadRequest, err.Error())
+		handle.ErrorResponse(c, http.StatusBadRequest, err.Error())
 		return
 	}
 
 	err = ch.ChatUseCaseI.DeleteChat(context.Background(), int64(chatID))
 	if err != nil {
-		errors.ErrorResponse(c, http.StatusNotFound, err.Error())
+		handle.ErrorResponse(c, http.StatusNotFound, err.Error())
 		return
 	}
 
@@ -421,13 +421,13 @@ func (ch *ChatController) SendMessage(c *gin.Context) {
 	var message entity.SendMessageRequest
 
 	if err := c.ShouldBindJSON(&message); err != nil {
-		errors.ErrorResponse(c, http.StatusBadRequest, err.Error())
+		handle.ErrorResponse(c, http.StatusBadRequest, err.Error())
 		return
 	}
 
 	message.ChatType = strings.ToLower(message.ChatType)
 	if message.ChatType != "private" && message.ChatType != "group" {
-		errors.ErrorResponse(c, http.StatusBadRequest, "property chat type must be 'private' or 'group'")
+		handle.ErrorResponse(c, http.StatusBadRequest, "property chat type must be 'private' or 'group'")
 		return
 	}
 
@@ -440,7 +440,7 @@ func (ch *ChatController) SendMessage(c *gin.Context) {
 		)
 
 		if err != nil {
-			errors.ErrorResponse(c, http.StatusInternalServerError, err.Error())
+			handle.ErrorResponse(c, http.StatusInternalServerError, err.Error())
 			return
 		}
 
@@ -448,14 +448,14 @@ func (ch *ChatController) SendMessage(c *gin.Context) {
 	}
 
 	if err := ch.ChatUseCaseI.SendMessage(context.Background(), message); err != nil {
-		errors.ErrorResponse(c, http.StatusInternalServerError, err.Error())
+		handle.ErrorResponse(c, http.StatusInternalServerError, err.Error())
 		return
 	}
 
 	if message.ChatType == "private" {
 		userResponse, err := ch.UserUseCase.GetByID(context.Background(), message.Receiver)
 		if err != nil {
-			errors.ErrorResponse(c, http.StatusNotFound, err.Error())
+			handle.ErrorResponse(c, http.StatusNotFound, err.Error())
 			return
 		}
 
@@ -467,7 +467,7 @@ func (ch *ChatController) SendMessage(c *gin.Context) {
 		} else {
 			err = json.Unmarshal([]byte(cacheNotification), &cacheData)
 			if err != nil {
-				errors.ErrorResponse(c, http.StatusInternalServerError, err.Error())
+				handle.ErrorResponse(c, http.StatusInternalServerError, err.Error())
 				return
 			}
 		}
@@ -518,7 +518,7 @@ func (ch *ChatController) SendMessage(c *gin.Context) {
 			},
 		})
 		if err != nil {
-			errors.ErrorResponse(c, http.StatusInternalServerError, err.Error())
+			handle.ErrorResponse(c, http.StatusInternalServerError, err.Error())
 			return
 		}
 
@@ -534,20 +534,20 @@ func (ch *ChatController) SendMessage(c *gin.Context) {
 		if isSend == false {
 			err := ch.RedisCache.Set(context.Background(), userResponse.Username, cacheData, 0)
 			if err != nil {
-				errors.ErrorResponse(c, http.StatusInternalServerError, err.Error())
+				handle.ErrorResponse(c, http.StatusInternalServerError, err.Error())
 				return
 			}
 		}
 	} else {
 		groupResponse, err := ch.ChatUseCaseI.GetGroup(context.Background(), int64(message.Receiver))
 		if err != nil {
-			errors.ErrorResponse(c, http.StatusNotFound, err.Error())
+			handle.ErrorResponse(c, http.StatusNotFound, err.Error())
 			return
 		}
 
 		groupUsers, err := ch.ChatUseCaseI.GroupUsers(context.Background(), int64(groupResponse.GroupId))
 		if err != nil {
-			errors.ErrorResponse(c, http.StatusNotFound, err.Error())
+			handle.ErrorResponse(c, http.StatusNotFound, err.Error())
 			return
 		}
 
@@ -560,7 +560,7 @@ func (ch *ChatController) SendMessage(c *gin.Context) {
 			} else {
 				err = json.Unmarshal([]byte(cacheNotification), &cacheData)
 				if err != nil {
-					errors.ErrorResponse(c, http.StatusInternalServerError, err.Error())
+					handle.ErrorResponse(c, http.StatusInternalServerError, err.Error())
 					return
 				}
 			}
@@ -611,7 +611,7 @@ func (ch *ChatController) SendMessage(c *gin.Context) {
 				},
 			})
 			if err != nil {
-				errors.ErrorResponse(c, http.StatusInternalServerError, err.Error())
+				handle.ErrorResponse(c, http.StatusInternalServerError, err.Error())
 				return
 			}
 
@@ -627,7 +627,7 @@ func (ch *ChatController) SendMessage(c *gin.Context) {
 			if isSend == false {
 				err := ch.RedisCache.Set(context.Background(), gettingUser.Username, cacheData, 0)
 				if err != nil {
-					errors.ErrorResponse(c, http.StatusInternalServerError, err.Error())
+					handle.ErrorResponse(c, http.StatusInternalServerError, err.Error())
 					return
 				}
 			}
@@ -658,31 +658,31 @@ func (ch *ChatController) UpdateMessage(c *gin.Context) {
 	var request entity.UpdateMessageRequest
 
 	if err := c.ShouldBindJSON(&request); err != nil {
-		errors.ErrorResponse(c, http.StatusBadRequest, err.Error())
+		handle.ErrorResponse(c, http.StatusBadRequest, err.Error())
 		return
 	}
 
 	chatResponse, err := ch.ChatUseCaseI.GetChat(context.Background(), int64(request.ChatID))
 	if err != nil {
-		errors.ErrorResponse(c, http.StatusNotFound, err.Error())
+		handle.ErrorResponse(c, http.StatusNotFound, err.Error())
 		return
 	}
 
 	messageResponse, err := ch.ChatUseCaseI.GetMessage(context.Background(), int64(request.MessageID))
 	if err != nil {
-		errors.ErrorResponse(c, http.StatusNotFound, err.Error())
+		handle.ErrorResponse(c, http.StatusNotFound, err.Error())
 		return
 	}
 
 	if err := ch.ChatUseCaseI.UpdateMessage(context.Background(), request); err != nil {
-		errors.ErrorResponse(c, http.StatusInternalServerError, err.Error())
+		handle.ErrorResponse(c, http.StatusInternalServerError, err.Error())
 		return
 	}
 
 	if chatResponse.ChatType == "private" {
 		userResponse, err := ch.UserUseCase.GetByID(context.Background(), chatResponse.ReceiverID)
 		if err != nil {
-			errors.ErrorResponse(c, http.StatusNotFound, err.Error())
+			handle.ErrorResponse(c, http.StatusNotFound, err.Error())
 			return
 		}
 
@@ -694,7 +694,7 @@ func (ch *ChatController) UpdateMessage(c *gin.Context) {
 		} else {
 			err = json.Unmarshal([]byte(cacheNotification), &cacheData)
 			if err != nil {
-				errors.ErrorResponse(c, http.StatusInternalServerError, err.Error())
+				handle.ErrorResponse(c, http.StatusInternalServerError, err.Error())
 				return
 			}
 		}
@@ -726,7 +726,7 @@ func (ch *ChatController) UpdateMessage(c *gin.Context) {
 			},
 		})
 		if err != nil {
-			errors.ErrorResponse(c, http.StatusInternalServerError, err.Error())
+			handle.ErrorResponse(c, http.StatusInternalServerError, err.Error())
 			return
 		}
 
@@ -742,20 +742,20 @@ func (ch *ChatController) UpdateMessage(c *gin.Context) {
 		if isSend == false {
 			err := ch.RedisCache.Set(context.Background(), userResponse.Username, updatedCacheNotification, 0)
 			if err != nil {
-				errors.ErrorResponse(c, http.StatusInternalServerError, err.Error())
+				handle.ErrorResponse(c, http.StatusInternalServerError, err.Error())
 				return
 			}
 		}
 	} else {
 		groupResponse, err := ch.ChatUseCaseI.GetGroup(context.Background(), int64(chatResponse.ReceiverID))
 		if err != nil {
-			errors.ErrorResponse(c, http.StatusInternalServerError, err.Error())
+			handle.ErrorResponse(c, http.StatusInternalServerError, err.Error())
 			return
 		}
 
 		groupUsers, err := ch.ChatUseCaseI.GroupUsers(context.Background(), int64(groupResponse.GroupId))
 		if err != nil {
-			errors.ErrorResponse(c, http.StatusInternalServerError, err.Error())
+			handle.ErrorResponse(c, http.StatusInternalServerError, err.Error())
 			return
 		}
 
@@ -768,7 +768,7 @@ func (ch *ChatController) UpdateMessage(c *gin.Context) {
 			} else {
 				err = json.Unmarshal([]byte(cacheNotification), &cacheData)
 				if err != nil {
-					errors.ErrorResponse(c, http.StatusInternalServerError, err.Error())
+					handle.ErrorResponse(c, http.StatusInternalServerError, err.Error())
 					return
 				}
 			}
@@ -800,7 +800,7 @@ func (ch *ChatController) UpdateMessage(c *gin.Context) {
 				},
 			})
 			if err != nil {
-				errors.ErrorResponse(c, http.StatusInternalServerError, err.Error())
+				handle.ErrorResponse(c, http.StatusInternalServerError, err.Error())
 				return
 			}
 
@@ -816,7 +816,7 @@ func (ch *ChatController) UpdateMessage(c *gin.Context) {
 			if isSend == false {
 				err := ch.RedisCache.Set(context.Background(), gettingUser.Username, updatedCacheNotification, 0)
 				if err != nil {
-					errors.ErrorResponse(c, http.StatusInternalServerError, err.Error())
+					handle.ErrorResponse(c, http.StatusInternalServerError, err.Error())
 					return
 				}
 			}
@@ -843,7 +843,125 @@ func (ch *ChatController) UpdateMessage(c *gin.Context) {
 // @Failure 		404 {object} errors.Error
 // @Failure 		500 {object} errors.Error
 // @Router 			/v1/delete-message/{id} [DELETE]
-func (ch *ChatController) DeleteMessage(c *gin.Context) {}
+func (ch *ChatController) DeleteMessage(c *gin.Context) {
+	messageID, err := strconv.Atoi(c.Param("id"))
+	if err != nil {
+		handle.ErrorResponse(c, http.StatusBadRequest, err.Error())
+		return
+	}
+
+	message, err := ch.ChatUseCaseI.GetMessage(context.Background(), int64(messageID))
+	if err != nil {
+		handle.ErrorResponse(c, http.StatusNotFound, err.Error())
+		return
+	}
+
+	chatResponse, err := ch.ChatUseCaseI.GetChat(context.Background(), int64(message.ChatId))
+	if err != nil {
+		handle.ErrorResponse(c, http.StatusNotFound, err.Error())
+		return
+	}
+
+	chatMessages, err := ch.ChatUseCaseI.GetChatMessages(context.Background(), int64(message.ChatId))
+	if err != nil {
+		handle.ErrorResponse(c, http.StatusNotFound, err.Error())
+		return
+	}
+
+	err = ch.ChatUseCaseI.DeleteMessage(context.Background(), int64(messageID))
+	if err != nil {
+		handle.ErrorResponse(c, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	if chatResponse.ChatType == "private" {
+		userResponse, err := ch.UserUseCase.GetByID(context.Background(), chatResponse.ReceiverID)
+		if err != nil {
+			handle.ErrorResponse(c, http.StatusNotFound, err.Error())
+			return
+		}
+
+		var cacheData entity.NotificationsResponse
+
+		cacheNotification, err := ch.RedisCache.Get(context.Background(), userResponse.Username)
+		if err != nil {
+			cacheData = entity.NotificationsResponse{}
+		} else {
+			err = json.Unmarshal([]byte(cacheNotification), &cacheData)
+			if err != nil {
+				handle.ErrorResponse(c, http.StatusInternalServerError, err.Error())
+				return
+			}
+		}
+
+		var updatedCacheNotification entity.NotificationsResponse
+		for _, notification := range cacheData.Notifications {
+			if int64(notification.ChatID) == chatResponse.ID {
+				if len(chatMessages.Messages) > 1 {
+					notification.LatestMessage = chatMessages.Messages[len(chatMessages.Messages)-2].Message
+				} else {
+					continue
+				}
+			}
+			updatedCacheNotification.Notifications = append(updatedCacheNotification.Notifications, notification)
+		}
+
+		err = ch.RedisCache.Set(context.Background(), userResponse.Username, updatedCacheNotification, 0)
+		if err != nil {
+			handle.ErrorResponse(c, http.StatusInternalServerError, err.Error())
+			return
+		}
+	} else {
+		groupResponse, err := ch.ChatUseCaseI.GetGroup(context.Background(), int64(chatResponse.ReceiverID))
+		if err != nil {
+			handle.ErrorResponse(c, http.StatusNotFound, err.Error())
+			return
+		}
+
+		groupUsers, err := ch.ChatUseCaseI.GroupUsers(context.Background(), int64(groupResponse.GroupId))
+		if err != nil {
+			handle.ErrorResponse(c, http.StatusNotFound, err.Error())
+			return
+		}
+
+		var cacheData entity.NotificationsResponse
+
+		for _, gettingUser := range groupUsers {
+			cacheNotification, err := ch.RedisCache.Get(context.Background(), gettingUser.Username)
+			if err != nil {
+				cacheData = entity.NotificationsResponse{}
+			} else {
+				err = json.Unmarshal([]byte(cacheNotification), &cacheData)
+				if err != nil {
+					handle.ErrorResponse(c, http.StatusInternalServerError, err.Error())
+					return
+				}
+			}
+
+			var updatedCacheNotification entity.NotificationsResponse
+			for _, notification := range cacheData.Notifications {
+				if int64(notification.ChatID) == chatResponse.ID {
+					if len(chatMessages.Messages) > 1 {
+						notification.LatestMessage = chatMessages.Messages[len(chatMessages.Messages)-2].Message
+					} else {
+						continue
+					}
+				}
+				updatedCacheNotification.Notifications = append(updatedCacheNotification.Notifications, notification)
+			}
+
+			err = ch.RedisCache.Set(context.Background(), gettingUser.Username, updatedCacheNotification, 0)
+			if err != nil {
+				handle.ErrorResponse(c, http.StatusInternalServerError, err.Error())
+				return
+			}
+		}
+	}
+
+	c.JSON(http.StatusOK, entity.ResponseWithStatus{
+		Status: true,
+	})
+}
 
 // GetChatMessages
 // @Security		BearerAuth
@@ -863,13 +981,13 @@ func (ch *ChatController) DeleteMessage(c *gin.Context) {}
 func (ch *ChatController) GetChatMessages(c *gin.Context) {
 	chatID, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
-		errors.ErrorResponse(c, http.StatusBadRequest, err.Error())
+		handle.ErrorResponse(c, http.StatusBadRequest, err.Error())
 		return
 	}
 
 	messages, err := ch.ChatUseCaseI.GetChatMessages(context.Background(), int64(chatID))
 	if err != nil {
-		errors.ErrorResponse(c, http.StatusNotFound, err.Error())
+		handle.ErrorResponse(c, http.StatusNotFound, err.Error())
 		return
 	}
 
@@ -894,19 +1012,19 @@ func (ch *ChatController) GetChatMessages(c *gin.Context) {
 func (ch *ChatController) GetAllNotifications(c *gin.Context) {
 	userID, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
-		errors.ErrorResponse(c, http.StatusBadRequest, err.Error())
+		handle.ErrorResponse(c, http.StatusBadRequest, err.Error())
 		return
 	}
 
 	userData, err := ch.UserUseCase.GetByID(context.Background(), userID)
 	if err != nil {
-		errors.ErrorResponse(c, http.StatusNotFound, err.Error())
+		handle.ErrorResponse(c, http.StatusNotFound, err.Error())
 		return
 	}
 
 	dataJson, err := ch.RedisCache.Get(context.Background(), userData.Username)
 	if err != nil {
-		errors.ErrorResponse(c, http.StatusNotFound, err.Error())
+		handle.ErrorResponse(c, http.StatusNotFound, err.Error())
 		return
 	}
 
@@ -914,7 +1032,7 @@ func (ch *ChatController) GetAllNotifications(c *gin.Context) {
 
 	err = json.Unmarshal([]byte(dataJson), &response)
 	if err != nil {
-		errors.ErrorResponse(c, http.StatusInternalServerError, err.Error())
+		handle.ErrorResponse(c, http.StatusInternalServerError, err.Error())
 		return
 	}
 
@@ -938,4 +1056,85 @@ func (ch *ChatController) GetAllNotifications(c *gin.Context) {
 // @Failure 		404 {object} errors.Error
 // @Failure 		500 {object} errors.Error
 // @Router 			/v1/delete-chat-notifications [DELETE]
-func (ch *ChatController) DeleteChatNotifications(c *gin.Context) {}
+func (ch *ChatController) DeleteChatNotifications(c *gin.Context) {
+	userID, err := strconv.Atoi(c.Query("user_id"))
+	if err != nil {
+		handle.ErrorResponse(c, http.StatusBadRequest, err.Error())
+		return
+	}
+
+	chatID, err := strconv.Atoi(c.Query("chat_id"))
+	if err != nil {
+		handle.ErrorResponse(c, http.StatusBadRequest, err.Error())
+		return
+	}
+
+	count, err := strconv.Atoi(c.Query("count"))
+	if err != nil {
+		handle.ErrorResponse(c, http.StatusBadRequest, err.Error())
+		return
+	}
+
+	userResponse, err := ch.UserUseCase.GetByID(context.Background(), userID)
+	if err != nil {
+		handle.ErrorResponse(c, http.StatusNotFound, err.Error())
+		return
+	}
+
+	chatResponse, err := ch.ChatUseCaseI.GetChat(context.Background(), int64(chatID))
+	if err != nil {
+		handle.ErrorResponse(c, http.StatusNotFound, err.Error())
+		return
+	}
+
+	chatMessages, err := ch.ChatUseCaseI.GetChatMessages(context.Background(), int64(chatID))
+	if err != nil {
+		handle.ErrorResponse(c, http.StatusNotFound, err.Error())
+		return
+	}
+
+	var cacheData entity.NotificationsResponse
+
+	cacheNotification, err := ch.RedisCache.Get(context.Background(), userResponse.Username)
+	if err != nil {
+		cacheData = entity.NotificationsResponse{}
+	} else {
+		err = json.Unmarshal([]byte(cacheNotification), &cacheData)
+		if err != nil {
+			handle.ErrorResponse(c, http.StatusInternalServerError, err.Error())
+			return
+		}
+	}
+
+	if len(cacheData.Notifications) > count {
+		var updatedCacheNotification entity.NotificationsResponse
+
+		for _, notification := range cacheData.Notifications {
+			if int64(notification.ChatID) == chatResponse.ID {
+				notification.LatestMessage = chatMessages.Messages[len(chatMessages.Messages)-(count+1)].Message
+				notification.LatestSender = chatMessages.Messages[len(chatMessages.Messages)-(count+1)].Sender
+			}
+			updatedCacheNotification.Notifications = append(updatedCacheNotification.Notifications, notification)
+		}
+
+		err = ch.RedisCache.Set(context.Background(), userResponse.Username, updatedCacheNotification, 0)
+		if err != nil {
+			handle.ErrorResponse(c, http.StatusInternalServerError, err.Error())
+			return
+		}
+
+		c.JSON(http.StatusOK, entity.ResponseWithStatus{
+			Status: true,
+		})
+	} else {
+		err := ch.RedisCache.Delete(context.Background(), userResponse.Username)
+		if err != nil {
+			handle.ErrorResponse(c, http.StatusInternalServerError, err.Error())
+			return
+		}
+
+		c.JSON(http.StatusOK, entity.ResponseWithStatus{
+			Status: true,
+		})
+	}
+}

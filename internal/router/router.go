@@ -179,8 +179,8 @@ func New(option *Router) *gin.Engine {
 	apiV1.POST("/send-message", chatController.SendMessage)
 	apiV1.PUT("/update-message", chatController.UpdateMessage)
 	apiV1.DELETE("/delete-message/:id", chatController.DeleteMessage)
-	apiV1.GET("/chat-messages", chatController.GetChatMessages)
-	apiV1.GET("/get-notifications", chatController.GetAllNotifications)
+	apiV1.GET("/chat-messages/:id", chatController.GetChatMessages)
+	apiV1.GET("/get-notifications/:id", chatController.GetAllNotifications)
 	apiV1.DELETE("/delete-chat-notifications", chatController.DeleteChatNotifications)
 
 	// User APIs

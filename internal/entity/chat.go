@@ -75,7 +75,30 @@ type UserChatsResponse struct {
 	}
 }
 
+type Chat struct {
+	ID         int64  `json:"id"`
+	ChatType   string `json:"chat_type"`
+	ReceiverID int    `json:"receiver_id"`
+}
+
+type Message struct {
+	ID          int    `json:"id"`
+	ChatId      int    `json:"chat_id"`
+	Content     string `json:"content"`
+	MessageType string `json:"message_type"`
+	Sender      int    `json:"sender"`
+}
+
 type SendMessageRequest struct {
+	ChatID      int    `json:"chat_id"`
+	ChatType    string `json:"chat_type"`
+	Message     string `json:"message"`
+	MessageType string `json:"message_type"`
+	Sender      int    `json:"sender"`
+	Receiver    int    `json:"receiver"`
+}
+
+type SendMessageData struct {
 	Action   string `json:"action"`
 	Property struct {
 		ChatID      int    `json:"chat_id"`
@@ -87,22 +110,36 @@ type SendMessageRequest struct {
 	} `json:"property"`
 }
 
-type UpdateMessageRequest struct {
+type UpdateMessageData struct {
 	Action   string `json:"action"`
 	Property struct {
 		ChatID     int    `json:"chat_id"`
 		MessageID  int    `json:"message_id"`
 		NewMessage string `json:"new_message"`
-	}
+	} `json:"property"`
 }
 
-type DeleteMessageRequest struct {
+type UpdateMessageRequest struct {
+	ChatID     int    `json:"chat_id"`
+	MessageID  int    `json:"message_id"`
+	NewMessage string `json:"new_message"`
+	Sender     int    `json:"sender"`
+	Receiver   int    `json:"receiver"`
+}
+
+type DeleteMessageData struct {
 	Action   string `json:"action"`
 	Property struct {
 		ChatID    int    `json:"chat_id"`
 		ChatType  string `json:"chat_type"`
 		MessageID int    `json:"message_id"`
-	}
+	} `json:"property"`
+}
+
+type DeleteMessageRequest struct {
+	ChatID    int    `json:"chat_id"`
+	ChatType  string `json:"chat_type"`
+	MessageID int    `json:"message_id"`
 }
 
 type ChatMessagesResponse struct {
@@ -112,7 +149,7 @@ type ChatMessagesResponse struct {
 		Sender      int    `json:"sender"`
 		Message     string `json:"content"`
 		MessageType string `json:"message_type"`
-	}
+	} `json:"messages"`
 }
 
 type NotificationsResponse struct {

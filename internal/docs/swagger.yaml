@@ -461,23 +461,18 @@ definitions:
     type: object
   entity.SendMessageRequest:
     properties:
-      action:
+      chat_id:
+        type: integer
+      chat_type:
         type: string
-      property:
-        properties:
-          chat_id:
-            type: integer
-          chat_type:
-            type: string
-          message:
-            type: string
-          message_type:
-            type: string
-          receiver:
-            type: integer
-          sender:
-            type: integer
-        type: object
+      message:
+        type: string
+      message_type:
+        type: string
+      receiver:
+        type: integer
+      sender:
+        type: integer
     type: object
   entity.SiteMenuListResponse:
     properties:
@@ -642,17 +637,16 @@ definitions:
     type: object
   entity.UpdateMessageRequest:
     properties:
-      action:
+      chat_id:
+        type: integer
+      message_id:
+        type: integer
+      new_message:
         type: string
-      property:
-        properties:
-          chat_id:
-            type: integer
-          message_id:
-            type: integer
-          new_message:
-            type: string
-        type: object
+      receiver:
+        type: integer
+      sender:
+        type: integer
     type: object
   entity.UpdatePostColumnsRequest:
     properties:
@@ -877,22 +871,17 @@ paths:
       summary: Register
       tags:
       - auth
-  /v1/chat-messages:
+  /v1/chat-messages/{id}:
     get:
       consumes:
       - application/json
       description: This API for getting chat messages with chat_id
       parameters:
       - description: Chat ID
-        in: query
+        in: path
         name: id
         required: true
         type: integer
-      - description: Chat Type
-        in: query
-        name: type
-        required: true
-        type: string
       produces:
       - application/json
       responses:
@@ -933,14 +922,14 @@ paths:
       parameters:
       - description: Chat ID
         in: query
-        name: id
+        name: chat_id
         required: true
         type: integer
-      - description: Chat Type
+      - description: User ID
         in: query
-        name: type
+        name: user_id
         required: true
-        type: string
+        type: integer
       - description: Read Message Count
         in: query
         name: count
@@ -1520,7 +1509,7 @@ paths:
       summary: List Folder
       tags:
       - folder-storage
-  /v1/get-notifications:
+  /v1/get-notifications/{id}:
     get:
       consumes:
       - application/json

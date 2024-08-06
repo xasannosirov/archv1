@@ -169,7 +169,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/v1/chat-messages": {
+        "/v1/chat-messages/{id}": {
             "get": {
                 "security": [
                     {
@@ -192,14 +192,7 @@ const docTemplate = `{
                         "type": "integer",
                         "description": "Chat ID",
                         "name": "id",
-                        "in": "query",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "Chat Type",
-                        "name": "type",
-                        "in": "query",
+                        "in": "path",
                         "required": true
                     }
                 ],
@@ -265,14 +258,14 @@ const docTemplate = `{
                     {
                         "type": "integer",
                         "description": "Chat ID",
-                        "name": "id",
+                        "name": "chat_id",
                         "in": "query",
                         "required": true
                     },
                     {
-                        "type": "string",
-                        "description": "Chat Type",
-                        "name": "type",
+                        "type": "integer",
+                        "description": "User ID",
+                        "name": "user_id",
                         "in": "query",
                         "required": true
                     },
@@ -1170,7 +1163,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/v1/get-notifications": {
+        "/v1/get-notifications/{id}": {
             "get": {
                 "security": [
                     {
@@ -3924,31 +3917,23 @@ const docTemplate = `{
         "entity.SendMessageRequest": {
             "type": "object",
             "properties": {
-                "action": {
+                "chat_id": {
+                    "type": "integer"
+                },
+                "chat_type": {
                     "type": "string"
                 },
-                "property": {
-                    "type": "object",
-                    "properties": {
-                        "chat_id": {
-                            "type": "integer"
-                        },
-                        "chat_type": {
-                            "type": "string"
-                        },
-                        "message": {
-                            "type": "string"
-                        },
-                        "message_type": {
-                            "type": "string"
-                        },
-                        "receiver": {
-                            "type": "integer"
-                        },
-                        "sender": {
-                            "type": "integer"
-                        }
-                    }
+                "message": {
+                    "type": "string"
+                },
+                "message_type": {
+                    "type": "string"
+                },
+                "receiver": {
+                    "type": "integer"
+                },
+                "sender": {
+                    "type": "integer"
                 }
             }
         },
@@ -4203,22 +4188,20 @@ const docTemplate = `{
         "entity.UpdateMessageRequest": {
             "type": "object",
             "properties": {
-                "action": {
+                "chat_id": {
+                    "type": "integer"
+                },
+                "message_id": {
+                    "type": "integer"
+                },
+                "new_message": {
                     "type": "string"
                 },
-                "property": {
-                    "type": "object",
-                    "properties": {
-                        "chat_id": {
-                            "type": "integer"
-                        },
-                        "message_id": {
-                            "type": "integer"
-                        },
-                        "new_message": {
-                            "type": "string"
-                        }
-                    }
+                "receiver": {
+                    "type": "integer"
+                },
+                "sender": {
+                    "type": "integer"
                 }
             }
         },

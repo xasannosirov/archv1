@@ -15,11 +15,13 @@ type ChatServiceI interface {
 	DeleteGroup(ctx context.Context, groupID, deletedBy int64) (entity.DeleteGroupResponse, error)
 	AddUserToGroup(ctx context.Context, userID, groupID int64) error
 	RemoveUserFromGroup(ctx context.Context, userID, groupID int64) error
-	CreateChat(ctx context.Context, creator int64, chatType string) (entity.CreatedChatResponse, error)
+	CreateChat(ctx context.Context, receiverID int64, chatType string) (entity.CreatedChatResponse, error)
 	DeleteChat(ctx context.Context, chatID int64) error
 	UserChats(ctx context.Context, userID int64) (entity.UserChatsResponse, error)
 	SendMessage(ctx context.Context, message entity.SendMessageRequest) error
 	UpdateMessage(ctx context.Context, message entity.UpdateMessageRequest) error
 	DeleteMessage(ctx context.Context, messageID int64) error
 	GetChatMessages(ctx context.Context, chatID int64) (entity.ChatMessagesResponse, error)
+	GetChat(ctx context.Context, chatID int64) (entity.Chat, error)
+	GetMessage(ctx context.Context, messageID int64) (entity.Message, error)
 }

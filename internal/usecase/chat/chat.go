@@ -52,8 +52,8 @@ func (ch *ChatUseCase) RemoveUserFromGroup(ctx context.Context, userID, groupID 
 	return ch.chatService.RemoveUserFromGroup(ctx, userID, groupID)
 }
 
-func (ch *ChatUseCase) CreateChat(ctx context.Context, creator int64, chatType string) (entity.CreatedChatResponse, error) {
-	return ch.chatService.CreateChat(ctx, creator, chatType)
+func (ch *ChatUseCase) CreateChat(ctx context.Context, receiverID int64, chatType string) (entity.CreatedChatResponse, error) {
+	return ch.chatService.CreateChat(ctx, receiverID, chatType)
 }
 
 func (ch *ChatUseCase) DeleteChat(ctx context.Context, chatID int64) error {
@@ -78,4 +78,12 @@ func (ch *ChatUseCase) DeleteMessage(ctx context.Context, messageID int64) error
 
 func (ch *ChatUseCase) GetChatMessages(ctx context.Context, chatID int64) (entity.ChatMessagesResponse, error) {
 	return ch.chatService.GetChatMessages(ctx, chatID)
+}
+
+func (ch *ChatUseCase) GetChat(ctx context.Context, chatID int64) (entity.Chat, error) {
+	return ch.chatService.GetChat(ctx, chatID)
+}
+
+func (ch *ChatUseCase) GetMessage(ctx context.Context, messageID int64) (entity.Message, error) {
+	return ch.chatService.GetMessage(ctx, messageID)
 }

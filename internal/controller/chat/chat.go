@@ -425,17 +425,17 @@ func (ch *ChatController) SendMessage(c *gin.Context) {
 		return
 	}
 
-	message.Property.ChatType = strings.ToLower(message.Property.ChatType)
-	if message.Property.ChatType != "private" && message.Property.ChatType != "group" {
+	message.ChatType = strings.ToLower(message.ChatType)
+	if message.ChatType != "private" && message.ChatType != "group" {
 		errors.ErrorResponse(c, http.StatusBadRequest, "property chat type must be 'private' or 'group'")
 		return
 	}
 
-	if message.Property.ChatID == 0 {
+	if message.ChatID == 0 {
 		newChat, err := ch.ChatUseCaseI.CreateChat(
 			context.Background(),
-			int64(message.Property.Sender),
-			message.Property.ChatType,
+			int64(message.Receiver),
+			message.ChatType,
 		)
 
 		if err != nil {
@@ -443,7 +443,7 @@ func (ch *ChatController) SendMessage(c *gin.Context) {
 			return
 		}
 
-		message.Property.ChatID = newChat.ChatId
+		message.ChatID = newChat.ChatId
 	}
 
 	if err := ch.ChatUseCaseI.SendMessage(context.Background(), message); err != nil {
@@ -451,10 +451,10 @@ func (ch *ChatController) SendMessage(c *gin.Context) {
 		return
 	}
 
-	if message.Property.ChatType == "private" {
-		userResponse, err := ch.UserUseCase.GetByID(context.Background(), message.Property.Receiver)
+	if message.ChatType == "private" {
+		userResponse, err := ch.UserUseCase.GetByID(context.Background(), message.Receiver)
 		if err != nil {
-			errors.ErrorResponse(c, http.StatusInternalServerError, err.Error())
+			errors.ErrorResponse(c, http.StatusNotFound, err.Error())
 			return
 		}
 
@@ -473,9 +473,9 @@ func (ch *ChatController) SendMessage(c *gin.Context) {
 
 		var isUpdate = false
 		for _, notification := range cacheData.Notifications {
-			if notification.ChatID == message.Property.ChatID {
-				notification.LatestMessage = message.Property.Message
-				notification.LatestSender = message.Property.Sender
+			if notification.ChatID == message.ChatID {
+				notification.LatestMessage = message.Message
+				notification.LatestSender = message.Sender
 				notification.TotalMessagesCount = notification.TotalMessagesCount + 1
 				isUpdate = true
 				break
@@ -490,15 +490,15 @@ func (ch *ChatController) SendMessage(c *gin.Context) {
 				LatestMessage      string `json:"latest_message"`
 				TotalMessagesCount int    `json:"total_messages_count"`
 			}{
-				ChatID:             message.Property.ChatID,
-				ChatType:           message.Property.ChatType,
-				LatestSender:       message.Property.Sender,
-				LatestMessage:      message.Property.Message,
+				ChatID:             message.ChatID,
+				ChatType:           message.ChatType,
+				LatestSender:       message.Sender,
+				LatestMessage:      message.Message,
 				TotalMessagesCount: 1,
 			})
 		}
 
-		sendingData, err := json.Marshal(&entity.SendMessageRequest{
+		sendingData, err := json.Marshal(&entity.SendMessageData{
 			Action: "new_message",
 			Property: struct {
 				ChatID      int    `json:"chat_id"`
@@ -508,12 +508,12 @@ func (ch *ChatController) SendMessage(c *gin.Context) {
 				Sender      int    `json:"sender"`
 				Receiver    int    `json:"receiver"`
 			}{
-				ChatID:      message.Property.ChatID,
-				ChatType:    message.Property.ChatType,
-				Message:     message.Property.Message,
-				MessageType: message.Property.MessageType,
-				Sender:      message.Property.Sender,
-				Receiver:    message.Property.Receiver,
+				ChatID:      message.ChatID,
+				ChatType:    message.ChatType,
+				Message:     message.Message,
+				MessageType: message.MessageType,
+				Sender:      message.Sender,
+				Receiver:    message.Receiver,
 			},
 		})
 		if err != nil {
@@ -538,15 +538,15 @@ func (ch *ChatController) SendMessage(c *gin.Context) {
 			}
 		}
 	} else {
-		groupResponse, err := ch.ChatUseCaseI.GetGroup(context.Background(), int64(message.Property.Receiver))
+		groupResponse, err := ch.ChatUseCaseI.GetGroup(context.Background(), int64(message.Receiver))
 		if err != nil {
-			errors.ErrorResponse(c, http.StatusInternalServerError, err.Error())
+			errors.ErrorResponse(c, http.StatusNotFound, err.Error())
 			return
 		}
 
 		groupUsers, err := ch.ChatUseCaseI.GroupUsers(context.Background(), int64(groupResponse.GroupId))
 		if err != nil {
-			errors.ErrorResponse(c, http.StatusInternalServerError, err.Error())
+			errors.ErrorResponse(c, http.StatusNotFound, err.Error())
 			return
 		}
 
@@ -566,9 +566,9 @@ func (ch *ChatController) SendMessage(c *gin.Context) {
 
 			var isUpdate = false
 			for _, notification := range cacheData.Notifications {
-				if notification.ChatID == message.Property.ChatID {
-					notification.LatestMessage = message.Property.Message
-					notification.LatestSender = message.Property.Sender
+				if notification.ChatID == message.ChatID {
+					notification.LatestMessage = message.Message
+					notification.LatestSender = message.Sender
 					notification.TotalMessagesCount = notification.TotalMessagesCount + 1
 					isUpdate = true
 					break
@@ -583,15 +583,15 @@ func (ch *ChatController) SendMessage(c *gin.Context) {
 					LatestMessage      string `json:"latest_message"`
 					TotalMessagesCount int    `json:"total_messages_count"`
 				}{
-					ChatID:             message.Property.ChatID,
-					ChatType:           message.Property.ChatType,
-					LatestSender:       message.Property.Sender,
-					LatestMessage:      message.Property.Message,
+					ChatID:             message.ChatID,
+					ChatType:           message.ChatType,
+					LatestSender:       message.Sender,
+					LatestMessage:      message.Message,
 					TotalMessagesCount: 1,
 				})
 			}
 
-			sendingData, err := json.Marshal(&entity.SendMessageRequest{
+			sendingData, err := json.Marshal(&entity.SendMessageData{
 				Action: "new_message",
 				Property: struct {
 					ChatID      int    `json:"chat_id"`
@@ -601,12 +601,12 @@ func (ch *ChatController) SendMessage(c *gin.Context) {
 					Sender      int    `json:"sender"`
 					Receiver    int    `json:"receiver"`
 				}{
-					ChatID:      message.Property.ChatID,
-					ChatType:    message.Property.ChatType,
-					Message:     message.Property.Message,
-					MessageType: message.Property.MessageType,
-					Sender:      message.Property.Sender,
-					Receiver:    message.Property.Receiver,
+					ChatID:      message.ChatID,
+					ChatType:    message.ChatType,
+					Message:     message.Message,
+					MessageType: message.MessageType,
+					Sender:      message.Sender,
+					Receiver:    message.Receiver,
 				},
 			})
 			if err != nil {
@@ -653,7 +653,179 @@ func (ch *ChatController) SendMessage(c *gin.Context) {
 // @Failure 		404 {object} errors.Error
 // @Failure 		500 {object} errors.Error
 // @Router 			/v1/update-message [PUT]
-func (ch *ChatController) UpdateMessage(c *gin.Context) {}
+func (ch *ChatController) UpdateMessage(c *gin.Context) {
+	var request entity.UpdateMessageRequest
+
+	if err := c.ShouldBindJSON(&request); err != nil {
+		errors.ErrorResponse(c, http.StatusBadRequest, err.Error())
+		return
+	}
+
+	chatResponse, err := ch.ChatUseCaseI.GetChat(context.Background(), int64(request.ChatID))
+	if err != nil {
+		errors.ErrorResponse(c, http.StatusNotFound, err.Error())
+		return
+	}
+
+	messageResponse, err := ch.ChatUseCaseI.GetMessage(context.Background(), int64(request.MessageID))
+	if err != nil {
+		errors.ErrorResponse(c, http.StatusNotFound, err.Error())
+		return
+	}
+
+	if err := ch.ChatUseCaseI.UpdateMessage(context.Background(), request); err != nil {
+		errors.ErrorResponse(c, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	if chatResponse.ChatType == "private" {
+		userResponse, err := ch.UserUseCase.GetByID(context.Background(), chatResponse.ReceiverID)
+		if err != nil {
+			errors.ErrorResponse(c, http.StatusNotFound, err.Error())
+			return
+		}
+
+		var cacheData entity.NotificationsResponse
+
+		cacheNotification, err := ch.RedisCache.Get(context.Background(), userResponse.Username)
+		if err != nil {
+			cacheData = entity.NotificationsResponse{}
+		} else {
+			err = json.Unmarshal([]byte(cacheNotification), &cacheData)
+			if err != nil {
+				errors.ErrorResponse(c, http.StatusInternalServerError, err.Error())
+				return
+			}
+		}
+
+		var updatedCacheNotification entity.NotificationsResponse
+		for _, notification := range cacheData.Notifications {
+			if notification.ChatID == request.ChatID {
+				notification.LatestMessage = request.NewMessage
+			}
+			updatedCacheNotification.Notifications = append(updatedCacheNotification.Notifications, notification)
+		}
+
+		sendingData, err := json.Marshal(&entity.SendMessageData{
+			Action: "update_message",
+			Property: struct {
+				ChatID      int    `json:"chat_id"`
+				ChatType    string `json:"chat_type"`
+				Message     string `json:"message"`
+				MessageType string `json:"message_type"`
+				Sender      int    `json:"sender"`
+				Receiver    int    `json:"receiver"`
+			}{
+				ChatID:      request.ChatID,
+				ChatType:    chatResponse.ChatType,
+				Message:     request.NewMessage,
+				MessageType: messageResponse.MessageType,
+				Sender:      request.Sender,
+				Receiver:    chatResponse.ReceiverID,
+			},
+		})
+		if err != nil {
+			errors.ErrorResponse(c, http.StatusInternalServerError, err.Error())
+			return
+		}
+
+		isSend := false
+		for connection := range ch.Hub.Connections {
+			if connection.Username == userResponse.Username {
+				connection.Send <- sendingData
+				isSend = true
+				break
+			}
+		}
+
+		if isSend == false {
+			err := ch.RedisCache.Set(context.Background(), userResponse.Username, updatedCacheNotification, 0)
+			if err != nil {
+				errors.ErrorResponse(c, http.StatusInternalServerError, err.Error())
+				return
+			}
+		}
+	} else {
+		groupResponse, err := ch.ChatUseCaseI.GetGroup(context.Background(), int64(chatResponse.ReceiverID))
+		if err != nil {
+			errors.ErrorResponse(c, http.StatusInternalServerError, err.Error())
+			return
+		}
+
+		groupUsers, err := ch.ChatUseCaseI.GroupUsers(context.Background(), int64(groupResponse.GroupId))
+		if err != nil {
+			errors.ErrorResponse(c, http.StatusInternalServerError, err.Error())
+			return
+		}
+
+		for _, gettingUser := range groupUsers {
+			var cacheData entity.NotificationsResponse
+
+			cacheNotification, err := ch.RedisCache.Get(context.Background(), gettingUser.Username)
+			if err != nil {
+				cacheData = entity.NotificationsResponse{}
+			} else {
+				err = json.Unmarshal([]byte(cacheNotification), &cacheData)
+				if err != nil {
+					errors.ErrorResponse(c, http.StatusInternalServerError, err.Error())
+					return
+				}
+			}
+
+			var updatedCacheNotification entity.NotificationsResponse
+			for _, notification := range cacheData.Notifications {
+				if notification.ChatID == request.ChatID {
+					notification.LatestMessage = request.NewMessage
+				}
+				updatedCacheNotification.Notifications = append(updatedCacheNotification.Notifications, notification)
+			}
+
+			sendingData, err := json.Marshal(&entity.SendMessageData{
+				Action: "update_message",
+				Property: struct {
+					ChatID      int    `json:"chat_id"`
+					ChatType    string `json:"chat_type"`
+					Message     string `json:"message"`
+					MessageType string `json:"message_type"`
+					Sender      int    `json:"sender"`
+					Receiver    int    `json:"receiver"`
+				}{
+					ChatID:      request.ChatID,
+					ChatType:    chatResponse.ChatType,
+					Message:     request.NewMessage,
+					MessageType: messageResponse.MessageType,
+					Sender:      request.Sender,
+					Receiver:    chatResponse.ReceiverID,
+				},
+			})
+			if err != nil {
+				errors.ErrorResponse(c, http.StatusInternalServerError, err.Error())
+				return
+			}
+
+			isSend := false
+			for connection := range ch.Hub.Connections {
+				if gettingUser.Username == connection.Username {
+					connection.Send <- sendingData
+					isSend = true
+					break
+				}
+			}
+
+			if isSend == false {
+				err := ch.RedisCache.Set(context.Background(), gettingUser.Username, updatedCacheNotification, 0)
+				if err != nil {
+					errors.ErrorResponse(c, http.StatusInternalServerError, err.Error())
+					return
+				}
+			}
+		}
+	}
+
+	c.JSON(http.StatusOK, entity.ResponseWithStatus{
+		Status: true,
+	})
+}
 
 // DeleteMessage
 // @Security		BearerAuth
@@ -679,16 +851,29 @@ func (ch *ChatController) DeleteMessage(c *gin.Context) {}
 // @Tags 			chat
 // @Accept 			json
 // @Produce 		json
-// @Param 			id query int true "Chat ID"
-// @Param 			type query string true "Chat Type"
+// @Param 			id path int true "Chat ID"
 // @Success 		200 {object} entity.ChatMessagesResponse
 // @Failure 		400 {object} errors.Error
 // @Failure 		401 {object} errors.Error
 // @Failure 		403 {object} errors.Error
 // @Failure 		404 {object} errors.Error
 // @Failure 		500 {object} errors.Error
-// @Router 			/v1/chat-messages [GET]
-func (ch *ChatController) GetChatMessages(c *gin.Context) {}
+// @Router 			/v1/chat-messages/{id} [GET]
+func (ch *ChatController) GetChatMessages(c *gin.Context) {
+	chatID, err := strconv.Atoi(c.Param("id"))
+	if err != nil {
+		errors.ErrorResponse(c, http.StatusBadRequest, err.Error())
+		return
+	}
+
+	messages, err := ch.ChatUseCaseI.GetChatMessages(context.Background(), int64(chatID))
+	if err != nil {
+		errors.ErrorResponse(c, http.StatusNotFound, err.Error())
+		return
+	}
+
+	c.JSON(http.StatusOK, messages)
+}
 
 // GetAllNotifications
 // @Security		BearerAuth
@@ -704,8 +889,36 @@ func (ch *ChatController) GetChatMessages(c *gin.Context) {}
 // @Failure 		403 {object} errors.Error
 // @Failure 		404 {object} errors.Error
 // @Failure 		500 {object} errors.Error
-// @Router 			/v1/get-notifications [GET]
-func (ch *ChatController) GetAllNotifications(c *gin.Context) {}
+// @Router 			/v1/get-notifications/{id} [GET]
+func (ch *ChatController) GetAllNotifications(c *gin.Context) {
+	userID, err := strconv.Atoi(c.Param("id"))
+	if err != nil {
+		errors.ErrorResponse(c, http.StatusBadRequest, err.Error())
+		return
+	}
+
+	userData, err := ch.UserUseCase.GetByID(context.Background(), userID)
+	if err != nil {
+		errors.ErrorResponse(c, http.StatusNotFound, err.Error())
+		return
+	}
+
+	dataJson, err := ch.RedisCache.Get(context.Background(), userData.Username)
+	if err != nil {
+		errors.ErrorResponse(c, http.StatusNotFound, err.Error())
+		return
+	}
+
+	var response entity.NotificationsResponse
+
+	err = json.Unmarshal([]byte(dataJson), &response)
+	if err != nil {
+		errors.ErrorResponse(c, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	c.JSON(http.StatusOK, response)
+}
 
 // DeleteChatNotifications
 // @Security		BearerAuth
@@ -714,8 +927,8 @@ func (ch *ChatController) GetAllNotifications(c *gin.Context) {}
 // @Tags 			chat
 // @Accept 			json
 // @Produce 		json
-// @Param 			id query int true "Chat ID"
-// @Param 			type query string true "Chat Type"
+// @Param 			chat_id query int true "Chat ID"
+// @Param 			user_id query int true "User ID"
 // @Param 			count query int true "Read Message Count"
 // @Success 		200 {object} entity.ResponseWithStatus
 // @Failure 		400 {object} errors.Error

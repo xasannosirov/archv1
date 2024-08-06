@@ -433,10 +433,10 @@ func (ch *RepoChat) UserChats(ctx context.Context, userID int64) (entity.UserCha
 func (ch *RepoChat) SendMessage(ctx context.Context, message entity.SendMessageRequest) error {
 	query := fmt.Sprintf(`
 	INSERT INTO messages (chat_id, content, message_type, sender) VALUES ('%d', '%s', '%s', '%d')`,
-		message.Property.ChatID,
-		message.Property.Message,
-		message.Property.MessageType,
-		message.Property.Sender,
+		message.ChatID,
+		message.Message,
+		message.MessageType,
+		message.Sender,
 	)
 
 	result, err := ch.DB.ExecContext(ctx, query)
@@ -459,9 +459,9 @@ func (ch *RepoChat) SendMessage(ctx context.Context, message entity.SendMessageR
 func (ch *RepoChat) UpdateMessage(ctx context.Context, message entity.UpdateMessageRequest) error {
 	query := fmt.Sprintf(`
 	UPDATE messages SET  chat_id = '%d', content = '%s' WHERE id = '%d' AND deleted_at IS NULL`,
-		message.Property.ChatID,
-		message.Property.NewMessage,
-		message.Property.MessageID,
+		message.ChatID,
+		message.NewMessage,
+		message.MessageID,
 	)
 
 	result, err := ch.DB.ExecContext(ctx, query)
@@ -543,6 +543,40 @@ func (ch *RepoChat) GetChatMessages(ctx context.Context, chatID int64) (entity.C
 
 	if err := rows.Err(); err != nil {
 		return entity.ChatMessagesResponse{}, err
+	}
+
+	return response, nil
+}
+
+func (ch *RepoChat) GetChat(ctx context.Context, chatID int64) (entity.Chat, error) {
+	query := fmt.Sprintf(`
+	SELECT id, chat_type, receiver_id FROM chat	WHERE id = '%d' AND deleted_at IS NULL
+	`, chatID)
+
+	var response entity.Chat
+
+	row := ch.DB.QueryRowContext(ctx, query)
+
+	err := row.Scan(&response.ID, &response.ChatType, &response.ReceiverID)
+	if err != nil {
+		return entity.Chat{}, err
+	}
+
+	return response, nil
+}
+
+func (ch *RepoChat) GetMessage(ctx context.Context, messageID int64) (entity.Message, error) {
+	query := fmt.Sprintf(`
+	SELECT id, chat_id, content, message_type, sender FROM messages	WHERE id = '%d' AND deleted_at IS NULL
+	`, messageID)
+
+	var response entity.Message
+
+	row := ch.DB.QueryRowContext(ctx, query)
+
+	err := row.Scan(&response.ID, &response.ChatId, &response.Content, &response.MessageType, &response.Sender)
+	if err != nil {
+		return entity.Message{}, err
 	}
 
 	return response, nil
